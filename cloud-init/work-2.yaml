@@ -1,0 +1,7 @@
+ssh_authorized_keys:
+    - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAnIVcQbvHQ6AtMDuv4Fd0geDA8oe5rypj5ktf8FQ42T4n5R8q+Ux1gX0TO941wLvEBt8DobDJpgMyD5atzGSaPw0PxC1NTNlsu9OfdQk8aRmOosbgcBa0msz0cyT2yTUR/bRP4cJc6KnWzDu7Z8Kph3G9HWWtdykkkP9FPkh+25XIOhXbNXTl6ZYUCH7FR3Qd53gLGT5KRnvvd5NGmWZ63rQvMChPRI1QyH2kzz6Flb4HjIy7PLudkae3cB8NEp31oLLzsI/G9/IMp5c9kryZx9RiyVcuhbLS6mYUAEOZTQKET/t2nINGLfnFFFlG43R7UpvUmJZ7OTk5f3ClWKhrPw==
+hostname: work-2
+k3os:
+   password: r3ks@I
+   token: K10ccdd59b3f6d2f2366246c8c160796007e5c35a5a9b319b66accaf434104a373c::server:61dcf0b3bd98f186148ea4654ac5b5b8
+   server_url: https://192.168.2.123:6443
