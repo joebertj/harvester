@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harvester-autoscaling-sim
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-metrics-script
+  namespace: harvester-autoscaling-sim
+data:
+  main.py: |
+    import asyncio
+    import uvicorn
+    import numpy as np
+    import time
+    import math
+    from fastapi import FastAPI
+    from prometheus_client import make_asgi_app, Gauge
+    
+    app = FastAPI()
+    metrics_app = make_asgi_app()
+    app.mount("/metrics", metrics_app)
+    
+    # Custom Metric
+    simulated_user_load = Gauge('simulated_user_load', 'Simulated user load using Poisson distribution')
+    
+    async def update_metrics():
+        while True:
+            # Oscillate the mean (lambda) between 2 and 18 over a ~5 minute period
+            current_time = time.time()
+            dynamic_lam = 10 + 8 * math.sin(current_time / 50.0)
+            
+            # Generate Poisson distribution around the oscillating mean
+            load = np.random.poisson(lam=max(1, dynamic_lam))
+            simulated_user_load.set(load)
+            await asyncio.sleep(5)
+            
+    @app.on_event("startup")
+    async def startup_event():
+        asyncio.create_task(update_metrics())
+
+    @app.get("/")
+    def read_root():
+        return {"status": "running", "metric": "simulated_user_load"}
+
+    if __name__ == "__main__":
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-metrics-app
+  namespace: harvester-autoscaling-sim
+  labels:
+    app: fastapi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-metrics
+  template:
+    metadata:
+      labels:
+        app: fastapi-metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: fastapi-metrics
+      containers:
+      - name: fastapi
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - "pip install fastapi uvicorn prometheus-client numpy && python /app/main.py"
+        ports:
+        - containerPort: 8000
+          name: http
+        volumeMounts:
+        - name: script-volume
+          mountPath: /app
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: script-volume
+        configMap:
+          name: fastapi-metrics-script
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-metrics-service
+  namespace: harvester-autoscaling-sim
+  labels:
+    app: fastapi-metrics
+spec:
+  selector:
+    app: fastapi-metrics
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+      name: http
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: fastapi-metrics-hpa
+  namespace: harvester-autoscaling-sim
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: fastapi-metrics-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: simulated_user_load
+      target:
+        type: AverageValue
+        averageValue: 10
