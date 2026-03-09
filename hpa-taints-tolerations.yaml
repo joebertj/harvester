@@ -1,0 +1,101 @@
+# -------------------------------------------------------
+# Deployment Variant: Taints & Tolerations
+#
+# Demonstrates how pods can be restricted to ONLY run on
+# nodes with a specific taint. Combines:
+#   - Toleration: allows the pod to schedule on a tainted node
+#   - nodeAffinity (required): forces the pod to ONLY go to
+#     nodes labelled as "intensive" worker VMs
+#
+# This simulates a dedicated workload node pattern — e.g.
+# GPU nodes, high-memory VMs, or spot/preemptible instances.
+#
+# SETUP (run once before applying this manifest):
+#   # 1. Taint your worker node(s):
+#   kubectl taint nodes <worker-node> workload=intensive:NoSchedule
+#
+#   # 2. Label the same node(s) so nodeAffinity can match:
+#   kubectl label nodes <worker-node> workload=intensive
+#
+# Apply after hpa-common.yaml:
+#   kubectl apply -f hpa-common.yaml
+#   kubectl apply -f hpa-taints-tolerations.yaml
+#
+# TEARDOWN:
+#   kubectl delete -f hpa-taints-tolerations.yaml
+#   kubectl delete -f hpa-common.yaml
+#   # Remove the taint and label from the node:
+#   kubectl taint nodes <worker-node> workload=intensive:NoSchedule-
+#   kubectl label nodes <worker-node> workload-
+# -------------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-metrics-app
+  namespace: harvester-autoscaling-sim
+  labels:
+    app: fastapi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-metrics
+  template:
+    metadata:
+      labels:
+        app: fastapi-metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Allow this pod to schedule on nodes tainted with workload=intensive:NoSchedule
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "intensive"
+        effect: "NoSchedule"
+
+      # Force the pod to ONLY schedule on nodes labelled workload=intensive
+      # Remove this block if you just want to ALLOW (not require) tainted nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: workload
+                operator: In
+                values:
+                - intensive
+        # Also spread 1 pod per node among the tainted nodes
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: fastapi-metrics
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+      - name: fastapi
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - "pip install fastapi uvicorn prometheus-client numpy && python /app/main.py"
+        ports:
+        - containerPort: 8000
+          name: http
+        volumeMounts:
+        - name: script-volume
+          mountPath: /app
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: script-volume
+        configMap:
+          name: fastapi-metrics-script

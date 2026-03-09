@@ -15,6 +15,7 @@ This demo simulates Kubernetes-level **Horizontal Pod Autoscaling (HPA)** using 
 | [`hpa-common.yaml`](./hpa-common.yaml) | **Shared base** — Namespace, ConfigMap, Service, HPA |
 | [`hpa-topology-spread.yaml`](./hpa-topology-spread.yaml) | **Variant A** — Deployment with `topologySpreadConstraints` (even pod distribution, `maxSkew: 1`) |
 | [`hpa-pod-anti-affinity.yaml`](./hpa-pod-anti-affinity.yaml) | **Variant B** — Deployment with strict `podAntiAffinity` (1 pod per node, forces new Harvester VM per replica) |
+| [`hpa-taints-tolerations.yaml`](./hpa-taints-tolerations.yaml) | **Variant C** — Deployment restricted to dedicated/tainted nodes using `tolerations` + `nodeAffinity` |
 
 ### How the metric works
 
@@ -43,6 +44,22 @@ kubectl apply -f hpa-common.yaml
 kubectl apply -f hpa-pod-anti-affinity.yaml
 ```
 
+### Variant C — Taints & Tolerations (Dedicated Nodes)
+
+Taint specific Harvester worker VMs so **only** the FastAPI pods can schedule there. All other workloads are blocked.
+
+```bash
+# 1. Taint and label your target worker node(s) first:
+kubectl taint nodes <worker-node> workload=intensive:NoSchedule
+kubectl label nodes <worker-node> workload=intensive
+
+# 2. Apply the common resources and variant:
+kubectl apply -f hpa-common.yaml
+kubectl apply -f hpa-taints-tolerations.yaml
+```
+
+> Pods without the matching toleration will go `Pending` on the tainted node, while the FastAPI pods land exclusively on it.
+
 ### Observe
 
 ```bash
@@ -60,7 +77,11 @@ kubectl get nodes -w
 
 ```bash
 # Remove the active deployment variant first, then the common resources
-kubectl delete -f hpa-topology-spread.yaml   # or hpa-pod-anti-affinity.yaml
+kubectl delete -f hpa-topology-spread.yaml        # or other variant
 kubectl delete -f hpa-common.yaml
+
+# For Variant C only — clean up the taint and label from the node:
+kubectl taint nodes <worker-node> workload=intensive:NoSchedule-
+kubectl label nodes <worker-node> workload-
 ```
 
