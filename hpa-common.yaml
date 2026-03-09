@@ -1,3 +1,15 @@
+# -------------------------------------------------------
+# Common resources shared by both HPA deployment variants:
+#   - hpa-topology-spread.yaml   (topologySpreadConstraints)
+#   - hpa-pod-anti-affinity.yaml (podAntiAffinity)
+#
+# Apply this file first, then apply one of the variant files.
+# Usage:
+#   kubectl apply -f hpa-common.yaml
+#   kubectl apply -f hpa-topology-spread.yaml   # OR
+#   kubectl apply -f hpa-pod-anti-affinity.yaml
+# -------------------------------------------------------
+
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -47,59 +59,6 @@ data:
 
     if __name__ == "__main__":
         uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: fastapi-metrics-app
-  namespace: harvester-autoscaling-sim
-  labels:
-    app: fastapi-metrics
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: fastapi-metrics
-  template:
-    metadata:
-      labels:
-        app: fastapi-metrics
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8000"
-        prometheus.io/path: "/metrics"
-    spec:
-      topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app: fastapi-metrics
-      containers:
-      - name: fastapi
-        image: python:3.11-slim
-        command: ["/bin/sh", "-c"]
-        args:
-        - "pip install fastapi uvicorn prometheus-client numpy && python /app/main.py"
-        ports:
-        - containerPort: 8000
-          name: http
-        volumeMounts:
-        - name: script-volume
-          mountPath: /app
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "500m"
-            memory: "512Mi"
-      volumes:
-      - name: script-volume
-        configMap:
-          name: fastapi-metrics-script
 
 ---
 apiVersion: v1

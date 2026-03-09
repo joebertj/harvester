@@ -1,0 +1,66 @@
+# -------------------------------------------------------
+# Deployment Variant: topologySpreadConstraints
+#
+# Pods are spread as evenly as possible across nodes
+# (maxSkew: 1). Multiple pods can share a node, but
+# no node can have more than 1 extra pod over any other.
+#
+# Best for: Simulating HPA scale-up/down with gradual
+# Harvester worker provisioning when nodes fill up.
+#
+# Apply after hpa-common.yaml:
+#   kubectl apply -f hpa-common.yaml
+#   kubectl apply -f hpa-topology-spread.yaml
+# -------------------------------------------------------
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-metrics-app
+  namespace: harvester-autoscaling-sim
+  labels:
+    app: fastapi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-metrics
+  template:
+    metadata:
+      labels:
+        app: fastapi-metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: fastapi-metrics
+      containers:
+      - name: fastapi
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - "pip install fastapi uvicorn prometheus-client numpy && python /app/main.py"
+        ports:
+        - containerPort: 8000
+          name: http
+        volumeMounts:
+        - name: script-volume
+          mountPath: /app
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: script-volume
+        configMap:
+          name: fastapi-metrics-script
