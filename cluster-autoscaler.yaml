@@ -1,0 +1,171 @@
+# -------------------------------------------------------
+# Cluster Autoscaler — Rancher/Harvester Cloud Provider
+#
+# This deploys the Cluster Autoscaler inside the RKE2
+# downstream cluster. It connects to the Rancher API
+# to scale MachinePools (Harvester VMs) up and down
+# based on Pending pods detected in the cluster.
+#
+# PREREQUISITES:
+#   1. RKE2 cluster provisioned via Rancher on Harvester
+#   2. A Rancher API token (create in Rancher UI → Account & API Keys)
+#   3. MachinePool autoscaler annotations set (see machinepool-patch.yaml)
+#
+# SETUP:
+#   # 1. Fill in your values in the Secret below:
+#   #    - RANCHER_URL    your Rancher server URL
+#   #    - RANCHER_TOKEN  your Rancher API token
+#   #    - CLUSTER_NAME   name of the downstream cluster
+#   #    - CLUSTER_NS     namespace (usually fleet-default)
+#
+#   # 2. Apply:
+#   kubectl apply -f cluster-autoscaler.yaml
+# -------------------------------------------------------
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+rules:
+- apiGroups: [""]
+  resources: ["events", "endpoints"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch", "list", "get", "update"]
+- apiGroups: [""]
+  resources: ["namespaces", "pods", "services", "replicationcontrollers", "persistentvolumeclaims", "persistentvolumes"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets", "replicasets", "daemonsets", "deployments"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses", "csinodes", "csidrivers", "csistoragecapacities"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create"]
+- apiGroups: ["coordination.k8s.io"]
+  resourceNames: ["cluster-autoscaler"]
+  resources: ["leases"]
+  verbs: ["get", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler
+subjects:
+- kind: ServiceAccount
+  name: cluster-autoscaler
+  namespace: kube-system
+
+---
+# Rancher API credentials and cluster targeting config
+# Replace all <PLACEHOLDER> values before applying
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-autoscaler-cloud-config
+  namespace: kube-system
+type: Opaque
+stringData:
+  cloud-config.yaml: |
+    url: https://<RANCHER_URL>
+    token: <RANCHER_API_TOKEN>
+    clusterName: <DOWNSTREAM_CLUSTER_NAME>
+    clusterNamespace: fleet-default
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    app: cluster-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8085"
+    spec:
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      # Allow scheduling on control plane nodes
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: cluster-autoscaler
+        image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.30.0
+        command:
+        - ./cluster-autoscaler
+        args:
+        - --cloud-provider=rancher
+        - --cloud-config=/etc/cluster-autoscaler/cloud-config.yaml
+        # How often the autoscaler checks for unschedulable pods (default: 10s)
+        - --scan-interval=10s
+        # Wait before scaling down after a scale-up (avoids flapping)
+        - --scale-down-delay-after-add=5m
+        # Pod must be unschedulable for this long before a scale-up is triggered
+        - --scale-down-unneeded-time=5m
+        # How to pick which node group to expand (options: random, most-pods, least-waste, price, priority)
+        - --expander=least-waste
+        - --balance-similar-node-groups=true
+        - --skip-nodes-with-system-pods=false
+        - --skip-nodes-with-local-storage=false
+        - --v=4
+        volumeMounts:
+        - name: cloud-config
+          mountPath: /etc/cluster-autoscaler
+          readOnly: true
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: cloud-config
+        secret:
+          secretName: cluster-autoscaler-cloud-config

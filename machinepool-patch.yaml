@@ -1,0 +1,49 @@
+# -------------------------------------------------------
+# MachinePool Autoscaler Annotations — Rancher/Harvester
+#
+# Apply this patch to your Rancher-provisioned cluster
+# resource to enable Cluster Autoscaler to scale the
+# worker node pool (workXX nodes) up and down.
+#
+# This is applied to the Rancher Management Cluster
+# (not the downstream RKE2 cluster).
+#
+# USAGE:
+#   # Option A — kubectl patch (recommended for quick setup):
+#   kubectl patch cluster <CLUSTER_NAME> \
+#     -n fleet-default \
+#     --type=merge \
+#     --patch-file=machinepool-patch.yaml
+#
+#   # Option B — apply directly if managing cluster declaratively:
+#   kubectl apply -f machinepool-patch.yaml
+# -------------------------------------------------------
+
+apiVersion: provisioning.cattle.io/v1
+kind: Cluster
+metadata:
+  name: <DOWNSTREAM_CLUSTER_NAME>   # e.g. local, homelab-rke2
+  namespace: fleet-default
+spec:
+  rkeConfig:
+    machinePools:
+
+    # ----------------------------------------------------------
+    # Worker node pool — autoscaled by Cluster Autoscaler
+    # Replace <HARVESTER_NODE_TEMPLATE> with your Harvester VM
+    # template name from Rancher → Infrastructure → Node Templates
+    # ----------------------------------------------------------
+    - name: worker-pool
+      quantity: 1
+      workerRole: true
+      machineDeploymentAnnotations:
+        # Min and max bounds for the Cluster Autoscaler
+        cluster.provisioning.cattle.io/autoscaler-min-size: "1"
+        cluster.provisioning.cattle.io/autoscaler-max-size: "10"
+
+        # Required ONLY if you want to scale from/to 0 nodes.
+        # Tells the autoscaler what resources a single node provides
+        # so it can simulate scheduling without a real node present.
+        # cluster.provisioning.cattle.io/autoscaler-resource-cpu: "4"
+        # cluster.provisioning.cattle.io/autoscaler-resource-memory: 8Gi
+        # cluster.provisioning.cattle.io/autoscaler-resource-ephemeral-storage: 50Gi

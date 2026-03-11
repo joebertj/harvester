@@ -85,3 +85,65 @@ kubectl taint nodes <worker-node> workload=intensive:NoSchedule-
 kubectl label nodes <worker-node> workload-
 ```
 
+---
+
+## Cluster Autoscaler — Rancher/Harvester Node Scaling
+
+The Cluster Autoscaler closes the loop by automatically provisioning and deprovisioning **Harvester worker VMs** when pods cannot be scheduled.
+
+### Files
+
+| File | Description |
+|---|---|
+| [`cluster-autoscaler.yaml`](./cluster-autoscaler.yaml) | Cluster Autoscaler RBAC, Rancher cloud config Secret, and Deployment |
+| [`machinepool-patch.yaml`](./machinepool-patch.yaml) | Rancher `Cluster` patch to annotate the worker MachinePool with autoscaler min/max bounds |
+
+### How it works
+
+```
+Pending pods detected
+  → Cluster Autoscaler reads MachinePool annotations (min/max)
+    → Calls Rancher API to increment MachinePool quantity
+      → Rancher provisions a new Harvester VM
+        → VM joins cluster as a new node
+          → Pending pods get scheduled
+```
+
+### Setup
+
+**Step 1 — Annotate the MachinePool** *(on the Rancher management cluster)*
+
+Fill in your cluster name in `machinepool-patch.yaml`, then:
+
+```bash
+kubectl patch cluster <CLUSTER_NAME> \
+  -n fleet-default \
+  --type=merge \
+  --patch-file=machinepool-patch.yaml
+```
+
+**Step 2 — Deploy the Cluster Autoscaler** *(on the downstream RKE2 cluster)*
+
+Edit the `Secret` in `cluster-autoscaler.yaml` to fill in:
+- `RANCHER_URL` — your Rancher server URL (e.g. `https://rancher.homelab.local`)
+- `RANCHER_API_TOKEN` — create in Rancher UI → Account & API Keys
+- `DOWNSTREAM_CLUSTER_NAME` — the name of your RKE2 cluster in Rancher
+
+Then apply:
+```bash
+kubectl apply -f cluster-autoscaler.yaml
+```
+
+**Step 3 — Verify**
+
+```bash
+kubectl logs -n kube-system deploy/cluster-autoscaler -f
+```
+
+You should see it scanning for unschedulable pods and calling the Rancher API when our HPA demo pods go Pending.
+
+### Tear Down
+
+```bash
+kubectl delete -f cluster-autoscaler.yaml
+```
