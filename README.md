@@ -4,7 +4,64 @@ This repo contains the files I used on my homelab using Harvester, k3os and k3s.
 
 ---
 
-## Demo: Kubernetes HPA with Custom Metric (Poisson Distribution)
+## Step 0: Deploy Rancher on a Harvester VM
+
+Rancher is required before running the Cluster Autoscaler or provisioning RKE2 downstream clusters on Harvester.
+
+### File: [`cloud-init/rancher.yaml`](./cloud-init/rancher.yaml)
+
+Installs k3s + cert-manager + Rancher via Helm on a single Ubuntu VM running inside Harvester.
+
+### VM Requirements
+
+| Resource | Minimum |
+|---|---|
+| CPU | 4 vCPU |
+| RAM | 8 GB |
+| Disk | 50 GB |
+| OS | Ubuntu 22.04 LTS |
+
+### Setup
+
+**Step 1 — Edit the cloud-init file** — open `cloud-init/rancher.yaml` and replace the placeholders:
+
+| Placeholder | Value |
+|---|---|
+| `<YOUR_SSH_PUBLIC_KEY>` | Your SSH public key (`cat ~/.ssh/id_rsa.pub`) |
+| `<RANCHER_HOSTNAME>` | Stable IP or FQDN for Rancher (e.g. `192.168.2.200`) |
+| `<BOOTSTRAP_PASSWORD>` | Your desired Rancher admin password |
+
+**Step 2 — Create the VM in Harvester UI:**
+1. Go to **Virtual Machines → Create**
+2. OS: Ubuntu 22.04 LTS, CPU: 4, RAM: 8 GB, Disk: 50 GB
+3. Under **Cloud Config → User Data**, paste `cloud-init/rancher.yaml`
+4. Start the VM and wait ~5 minutes
+
+**Step 3 — Verify Rancher is ready:**
+```bash
+ssh ubuntu@<RANCHER_HOSTNAME>
+sudo tail -f /var/log/install-rancher.log
+# Look for: "Rancher is ready!"
+```
+
+**Step 4 — Open Rancher UI:** `https://<RANCHER_HOSTNAME>` with your bootstrap password.
+
+---
+
+## Step 1: Connect Rancher to Harvester (Harvester Plugin)
+
+1. Log into Rancher UI
+2. Go to **☰ → Virtualization Management**
+3. Click **Import Existing → Harvester**
+4. In your **Harvester** dashboard, go to **Support → Download KubeConfig**
+5. Paste the downloaded kubeconfig into Rancher and click **Import**
+
+Once connected, Rancher can use Harvester VMs to provision RKE2 downstream clusters — required for the Cluster Autoscaler.
+
+---
+
+## Step 2: Demo — Kubernetes HPA with Custom Metric (Poisson Distribution)
+
 
 This demo simulates Kubernetes-level **Horizontal Pod Autoscaling (HPA)** using a **custom metric** from a FastAPI app, combined with **Harvester node-level autoscaling**.
 

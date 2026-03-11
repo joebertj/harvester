@@ -1,0 +1,120 @@
+#cloud-config
+# -------------------------------------------------------
+# Cloud-init for a Rancher Server VM on Harvester
+#
+# This provisions a Ubuntu-based VM that:
+#   1. Installs k3s (single-node cluster for Rancher)
+#   2. Installs Helm
+#   3. Installs cert-manager
+#   4. Installs Rancher via Helm
+#
+# BEFORE USE — set these values:
+#   - Replace <YOUR_SSH_PUBLIC_KEY> with your SSH public key
+#   - Replace <RANCHER_HOSTNAME> with the FQDN or stable IP
+#     you will use to access Rancher
+#     (e.g. rancher.homelab.local or 192.168.2.200)
+#   - Replace <BOOTSTRAP_PASSWORD> with your desired admin password
+#
+# VM SIZING RECOMMENDATIONS:
+#   CPU: 4 vCPU minimum
+#   RAM: 8 GB minimum
+#   Disk: 50 GB minimum
+#   OS:  Ubuntu 22.04 LTS
+# -------------------------------------------------------
+
+hostname: rancher
+manage_etc_hosts: true
+
+ssh_authorized_keys:
+  - <YOUR_SSH_PUBLIC_KEY>
+
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - <YOUR_SSH_PUBLIC_KEY>
+
+package_update: true
+package_upgrade: true
+packages:
+  - curl
+  - open-iscsi
+  - nfs-common
+  - jq
+
+write_files:
+  - path: /usr/local/bin/install-rancher.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      RANCHER_HOSTNAME="<RANCHER_HOSTNAME>"
+      BOOTSTRAP_PASSWORD="<BOOTSTRAP_PASSWORD>"
+      RANCHER_VERSION="2.9.3"
+      CERT_MANAGER_VERSION="v1.16.2"
+      K3S_VERSION="v1.31.4+k3s1"
+
+      echo ">>> [1/5] Installing k3s..."
+      curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="${K3S_VERSION}" sh -s - server \
+        --disable traefik \
+        --node-name rancher-server
+      
+      # Wait for k3s to be ready
+      echo ">>> Waiting for k3s to be ready..."
+      until kubectl get nodes 2>/dev/null | grep -q "Ready"; do
+        sleep 5
+      done
+      echo ">>> k3s is ready."
+
+      # Make kubeconfig accessible
+      mkdir -p /home/ubuntu/.kube
+      cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+      sed -i "s/127.0.0.1/${RANCHER_HOSTNAME}/g" /home/ubuntu/.kube/config
+      chown -R ubuntu:ubuntu /home/ubuntu/.kube
+      chmod 600 /home/ubuntu/.kube/config
+
+      echo ">>> [2/5] Installing Helm..."
+      curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      echo ">>> [3/5] Adding Helm repos..."
+      helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+      helm repo add jetstack https://charts.jetstack.io
+      helm repo update
+
+      echo ">>> [4/5] Installing cert-manager ${CERT_MANAGER_VERSION}..."
+      kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml
+      helm install cert-manager jetstack/cert-manager \
+        --namespace cert-manager \
+        --create-namespace \
+        --version ${CERT_MANAGER_VERSION} \
+        --set crds.enabled=false
+      
+      echo ">>> Waiting for cert-manager to be ready..."
+      kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
+      kubectl rollout status deployment/cert-manager-webhook -n cert-manager --timeout=120s
+
+      echo ">>> [5/5] Installing Rancher ${RANCHER_VERSION}..."
+      helm install rancher rancher-latest/rancher \
+        --namespace cattle-system \
+        --create-namespace \
+        --version "${RANCHER_VERSION}" \
+        --set hostname="${RANCHER_HOSTNAME}" \
+        --set bootstrapPassword="${BOOTSTRAP_PASSWORD}" \
+        --set replicas=1 \
+        --set ingress.tls.source=rancher
+
+      echo ">>> Waiting for Rancher to be ready (this takes a few minutes)..."
+      kubectl rollout status deployment/rancher -n cattle-system --timeout=300s
+
+      echo ""
+      echo "=============================================="
+      echo "  Rancher is ready!"
+      echo "  URL:      https://${RANCHER_HOSTNAME}"
+      echo "  Password: ${BOOTSTRAP_PASSWORD}"
+      echo "=============================================="
+
+runcmd:
+  - systemctl enable iscsid && systemctl start iscsid
+  - /usr/local/bin/install-rancher.sh >> /var/log/install-rancher.log 2>&1
