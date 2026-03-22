@@ -1,0 +1,16 @@
+---
+# Main inventory — all steps run from your local workstation (localhost)
+# The k3s control node is accessed via SSH for kubeconfig fetch only
+
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+  vars:
+    control_node_ip: "192.168.2.123"
+    control_node_user: "rancher"
+    ssh_key_path: "~/.ssh/klti"
+    kubeconfig_path: "~/.kube/harvester-k3s.yaml"
+    repo_root: "{{ playbook_dir | dirname }}"

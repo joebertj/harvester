@@ -1,0 +1,62 @@
+---
+# Traefik HelmChartConfig — customizes the k3s built-in Traefik deployment
+# Apply with: kubectl apply -f traefik/traefik-config.yaml
+# This goes into kube-system namespace (where k3s manages Traefik via HelmChart)
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    # Enable the Traefik dashboard (accessible internally via port-forward)
+    dashboard:
+      enabled: true
+
+    # Global arguments
+    globalArguments:
+      - "--global.checknewversion=false"
+      - "--global.sendanonymoususage=false"
+
+    additionalArguments:
+      - "--log.level=INFO"
+      - "--serverstransport.insecureskipverify=true"  # allow proxying to LAN services with self-signed certs
+
+    ports:
+      web:
+        port: 8000
+        expose: true
+        exposedPort: 80
+        protocol: TCP
+        # Redirect all HTTP to HTTPS
+        redirectTo: websecure
+
+      websecure:
+        port: 8443
+        expose: true
+        exposedPort: 443
+        protocol: TCP
+        tls:
+          enabled: true
+
+      ssh:
+        port: 2222
+        expose: true
+        exposedPort: 2222
+        protocol: TCP
+
+    # Use LoadBalancer so Traefik gets an external IP on the node
+    service:
+      type: LoadBalancer
+      spec:
+        # Pin to the k3s control node IP so port-forward works predictably
+        externalIPs:
+          - 192.168.2.123
+
+    # Enable CRD-based IngressRoute
+    providers:
+      kubernetesCRD:
+        enabled: true
+        allowCrossNamespace: true
+      kubernetesIngress:
+        enabled: true

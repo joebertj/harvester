@@ -1,0 +1,22 @@
+---
+# IngressRoute for Vault UI
+# → https://vault.home.kenchlightyear.com → Vault pod in vault namespace
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vault-ui
+  namespace: vault
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vault.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: vault
+          port: 8200
+  tls:
+    secretName: home-kenchlightyear-tls
+    # Note: TLS secret is in homelab namespace but Traefik can read cross-namespace
+    # via allowCrossNamespace: true set in traefik-config.yaml

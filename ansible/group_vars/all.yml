@@ -1,0 +1,29 @@
+---
+# Group variables shared across all playbooks
+
+# Infrastructure IPs
+control_node_ip: "192.168.2.123"
+control_node_user: "rancher"
+ssh_key_path: "~/.ssh/klti"
+kubeconfig_path: "{{ lookup('env', 'HOME') }}/.kube/harvester-k3s.yaml"
+
+# Paths (relative to repo root)
+repo_root: "{{ inventory_dir | dirname }}"
+ingress_dir: "{{ repo_root }}/ingress"
+
+# Versions
+cert_manager_version: "v1.9.1"
+external_secrets_version: "v0.7.2"
+
+# Domains
+base_domain: "home.kenchlightyear.com"
+vault_domain: "vault.{{ base_domain }}"
+
+# Vault
+vault_namespace: "vault"
+vault_addr: "http://vault.vault.svc.cluster.local:8200"
+
+# Namespaces
+homelab_namespace: "homelab"
+cert_manager_namespace: "cert-manager"
+external_secrets_namespace: "external-secrets"

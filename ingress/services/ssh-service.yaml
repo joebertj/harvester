@@ -1,0 +1,28 @@
+---
+# TCP Endpoints + Service for SSH at 192.168.2.122:22
+# Used by the Traefik TCP IngressRouteTCP
+
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: ssh-server
+  namespace: homelab
+subsets:
+  - addresses:
+      - ip: 192.168.2.122
+    ports:
+      - port: 22
+        protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ssh-server
+  namespace: homelab
+spec:
+  ports:
+    - port: 22
+      targetPort: 22
+      protocol: TCP
+  clusterIP: None

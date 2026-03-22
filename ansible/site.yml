@@ -1,0 +1,35 @@
+---
+# site.yml — Master playbook: runs the full homelab ingress stack setup in order
+# Usage:
+#   ansible-playbook -i inventory.yml site.yml
+#
+# Run individual steps:
+#   ansible-playbook -i inventory.yml playbooks/01-kubeconfig.yml
+#   ansible-playbook -i inventory.yml playbooks/04-vault.yml
+#
+# Skip steps using tags:
+#   ansible-playbook -i inventory.yml site.yml --skip-tags vault
+
+- name: "Step 1 — Setup local kubeconfig"
+  import_playbook: playbooks/01-kubeconfig.yml
+  tags: [kubeconfig]
+
+- name: "Step 2 — Verify prerequisites (helm, kubectl)"
+  import_playbook: playbooks/02-prereqs.yml
+  tags: [prereqs]
+
+- name: "Step 3 — Install cert-manager"
+  import_playbook: playbooks/03-cert-manager.yml
+  tags: [cert-manager]
+
+- name: "Step 4 — Deploy and initialize Vault"
+  import_playbook: playbooks/04-vault.yml
+  tags: [vault]
+
+- name: "Step 5 — Install External Secrets Operator"
+  import_playbook: playbooks/05-external-secrets.yml
+  tags: [eso, external-secrets]
+
+- name: "Step 6 — Deploy ingress stack"
+  import_playbook: playbooks/06-ingress-stack.yml
+  tags: [ingress]

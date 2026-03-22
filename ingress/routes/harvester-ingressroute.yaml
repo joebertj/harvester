@@ -1,0 +1,32 @@
+---
+# IngressRoute for Harvester UI
+# → https://harvester.home.kenchlightyear.com → 192.168.2.118:443
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: harvester-ui
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`harvester.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: harvester-ui
+          port: 443
+          scheme: https          # backend speaks HTTPS
+          serversTransport: insecure-transport
+  tls:
+    secretName: home-kenchlightyear-tls
+
+---
+# ServersTransport — skip TLS verification for LAN backend (self-signed cert)
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: insecure-transport
+  namespace: homelab
+spec:
+  insecureSkipVerify: true

@@ -1,0 +1,52 @@
+# Vault Helm values for k3s homelab
+# Single-node, Raft integrated storage — no Consul needed
+
+server:
+  # Use standalone mode with Raft (single node, persistent)
+  standalone:
+    enabled: true
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+
+      storage "raft" {
+        path = "/vault/data"
+        node_id = "vault-0"
+      }
+
+      api_addr     = "http://vault.vault.svc.cluster.local:8200"
+      cluster_addr = "https://vault.vault.svc.cluster.local:8201"
+
+  # Persistent volume for Raft data
+  dataStorage:
+    enabled: true
+    size: 1Gi
+    storageClass: local-path   # k3s default storage class
+
+  # Resource limits appropriate for homelab
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+  # Liveness / readiness
+  readinessProbe:
+    enabled: true
+    path: /v1/sys/health?standbyok=true
+
+# Enable the Vault Web UI
+ui:
+  enabled: true
+  serviceType: ClusterIP
+
+# Agent injector — disabled for now (we use External Secrets Operator instead)
+injector:
+  enabled: false

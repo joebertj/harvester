@@ -1,0 +1,20 @@
+---
+# IngressRoute for Homer dashboard (landing page)
+# → https://home.kenchlightyear.com → homer pod in cluster
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: homer-dashboard
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: homer
+          port: 8080
+  tls:
+    secretName: home-kenchlightyear-tls

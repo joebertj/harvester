@@ -1,0 +1,28 @@
+---
+# Endpoints + Service for Harvester UI at 192.168.2.118:443
+# Using manual Endpoints instead of ExternalName to support HTTPS backends
+
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: harvester-ui
+  namespace: homelab
+subsets:
+  - addresses:
+      - ip: 192.168.2.118
+    ports:
+      - port: 443
+        protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harvester-ui
+  namespace: homelab
+spec:
+  ports:
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+  clusterIP: None   # headless — uses manual Endpoints above

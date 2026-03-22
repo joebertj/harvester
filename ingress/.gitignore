@@ -1,0 +1,11 @@
+# Secrets — never commit these
+vault/vault-init.json
+cert-manager/cloudflare-secret.yaml
+
+# Helm cache
+.helm/
+
+# Editor
+.DS_Store
+*.swp
+*.swo

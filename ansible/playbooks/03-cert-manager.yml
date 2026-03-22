@@ -1,0 +1,68 @@
+---
+# 03-cert-manager.yml
+# Installs cert-manager via Helm and applies the ClusterIssuer
+
+- name: Install cert-manager
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  vars:
+    letsencrypt_email: "{{ lookup('env', 'LETSENCRYPT_EMAIL') }}"
+
+  tasks:
+    - name: Ensure LETSENCRYPT_EMAIL is set
+      ansible.builtin.fail:
+        msg: "Please set LETSENCRYPT_EMAIL in secrets.env (or export it)"
+      when: letsencrypt_email | length == 0
+    - name: Add Jetstack Helm repo
+      ansible.builtin.command: helm repo add jetstack https://charts.jetstack.io
+      changed_when: false
+
+    - name: Update Helm repos
+      ansible.builtin.command: helm repo update
+      changed_when: false
+
+    - name: Install cert-manager
+      ansible.builtin.command: >
+        helm upgrade --install cert-manager jetstack/cert-manager
+        --namespace {{ cert_manager_namespace }}
+        --create-namespace
+        --version {{ cert_manager_version }}
+        --set installCRDs=true
+        --wait
+      register: cert_manager_install
+      changed_when: "'deployed' in cert_manager_install.stdout or 'upgraded' in cert_manager_install.stdout"
+
+    - name: Wait for cert-manager to be ready
+      ansible.builtin.command: >
+        kubectl rollout status deployment/cert-manager
+        -n {{ cert_manager_namespace }}
+      changed_when: false
+
+    - name: Apply namespace
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/namespace.yaml
+      changed_when: true
+
+    - name: Copy ClusterIssuer for rendering
+      ansible.builtin.copy:
+        src: "{{ ingress_dir }}/cert-manager/clusterissuer.yaml"
+        dest: "/tmp/clusterissuer-rendered.yaml"
+        mode: "0600"
+
+    - name: Render email in ClusterIssuer
+      ansible.builtin.replace:
+        path: "/tmp/clusterissuer-rendered.yaml"
+        regexp: 'REPLACE_WITH_YOUR_EMAIL@example\.com'
+        replace: "{{ letsencrypt_email }}"
+
+    - name: Apply ClusterIssuer
+      ansible.builtin.command: kubectl apply -f /tmp/clusterissuer-rendered.yaml
+      changed_when: true
+
+    - name: Clean up rendered ClusterIssuer
+      ansible.builtin.file:
+        path: /tmp/clusterissuer-rendered.yaml
+        state: absent
