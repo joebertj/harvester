@@ -2,7 +2,7 @@
 # IngressRoute for Nano KVM UI
 # → https://kvm.home.kenchlightyear.com → 192.168.2.129:443
 
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: kvm-ui
