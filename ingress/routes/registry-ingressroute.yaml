@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: registry
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`registry.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: registry
+          port: 5000
+  tls:
+    secretName: home-kenchlightyear-tls

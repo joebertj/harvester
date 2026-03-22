@@ -33,3 +33,7 @@
 - name: "Step 6 — Deploy ingress stack"
   import_playbook: playbooks/06-ingress-stack.yml
   tags: [ingress]
+
+- name: "Step 7 — Deploy local container registry"
+  import_playbook: playbooks/07-registry.yml
+  tags: [registry]

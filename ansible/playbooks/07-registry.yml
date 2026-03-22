@@ -1,0 +1,31 @@
+---
+# 07-registry.yml
+# Applies Kubernetes registry manifests
+
+- name: Deploy Local Registry
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Apply registry backend manifests (Deployment, PVC, Service)
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/registry/
+      changed_when: true
+
+    - name: Apply registry IngressRoute
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/routes/registry-ingressroute.yaml
+      changed_when: true
+
+    - name: Wait for Registry to become ready
+      ansible.builtin.command: >
+        kubectl rollout status deployment/registry -n {{ homelab_namespace }}
+      changed_when: false
+
+    - name: "✅ Local Registry deployed"
+      ansible.builtin.debug:
+        msg: |
+          Registry is active! Reachable at:
+          https://registry.{{ base_domain }}
