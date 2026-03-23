@@ -26,7 +26,7 @@ spec:
       container:
         image: gcr.io/kaniko-project/executor:latest
         args:
-          - "--context=git://github.com/joebertj/hpa-app.git#refs/heads/{{workflow.parameters.branch}}"
+          - "--context=git://github.com/joebertj/hpa-app.git#{{workflow.parameters.branch}}"
           - "--destination={{workflow.parameters.image_name}}:{{workflow.name}}"
           - "--destination={{workflow.parameters.image_name}}:latest"
           - "--skip-tls-verify" # Internal registry might have self-signed or trust issues
