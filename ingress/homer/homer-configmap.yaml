@@ -82,6 +82,13 @@ data:
             url: "https://registry.home.kenchlightyear.com"
             target: "_blank"
 
+          - name: "Tekton"
+            logo: "https://tekton.dev/images/tekton-horizontal-color.png"
+            subtitle: "CI/CD Pipelines"
+            tag: "cicd"
+            url: "https://tekton.home.kenchlightyear.com"
+            target: "_blank"
+
           - name: "Headlamp"
             logo: "https://headlamp.dev/img/logo.svg"
             subtitle: "Kubernetes cluster explorer"
@@ -91,7 +98,7 @@ data:
 
           - name: "Hubble"
             logo: "https://raw.githubusercontent.com/cilium/hubble/master/Documentation/images/hubble_logo.png"
-            subtitle: "Cilium network observability (active with 20a)"
+            subtitle: "Cilium network observability"
             tag: "observability"
             url: "https://hubble.home.kenchlightyear.com"
             target: "_blank"
