@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REGISTRY="registry.home.kenchlightyear.com"
 IMAGE_NAME="library/scaling-fastapi"
 TAG="latest"
@@ -24,7 +25,7 @@ echo "Logging into Harbor..."
 echo "$HARBOR_PASS" | docker login ${REGISTRY} -u admin --password-stdin
 
 echo "Building Docker image..."
-docker build -t ${REGISTRY}/${IMAGE_NAME}:${TAG} .
+docker build -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR"
 
 echo "Pushing Docker image to ${REGISTRY}..."
 docker push ${REGISTRY}/${IMAGE_NAME}:${TAG}
