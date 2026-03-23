@@ -3,7 +3,7 @@
 # Installs cert-manager via Helm and applies the ClusterIssuer
 
 - name: Install cert-manager
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

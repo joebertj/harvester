@@ -1,0 +1,14 @@
+---
+# site-do.yml
+# Master playbook for DigitalOcean (Backup) cluster
+
+- import_playbook: playbooks/do-02-kubeconfig.yml
+- import_playbook: playbooks/do-03-cert-manager.yml
+- import_playbook: playbooks/do-04-vault.yml
+- import_playbook: playbooks/do-05-external-secrets.yml
+- import_playbook: playbooks/do-06-ingress-stack.yml
+- import_playbook: playbooks/do-07-registry.yml
+- import_playbook: playbooks/do-08-headlamp.yml
+- import_playbook: playbooks/do-09-argo-workflows.yml
+- import_playbook: playbooks/do-09a-argo-events.yml
+- import_playbook: playbooks/do-10-monitoring.yml

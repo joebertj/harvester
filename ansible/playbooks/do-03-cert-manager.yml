@@ -1,0 +1,72 @@
+---
+# do-03-cert-manager.yml
+# Installs cert-manager on DOKS and configures ClusterIssuer for homelab.kenchlightyear.com
+# Uses direct secret for initial setup to avoid ESO dependency.
+
+- name: Deploy cert-manager (DigitalOcean)
+  hosts: digitalocean
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  vars:
+    cloudflare_api_token: "{{ lookup('env', 'CF_API_TOKEN') }}"
+    letsencrypt_email: "joebertj@gmail.com"
+
+  tasks:
+    - name: Ensure CF_API_TOKEN is provided
+      ansible.builtin.fail:
+        msg: "Missing CF_API_TOKEN. Did you 'source secrets.env'?"
+      when: cloudflare_api_token | length == 0
+
+    - name: Create cert-manager namespace
+      ansible.builtin.command: kubectl create namespace cert-manager
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Add jetstack Helm repo
+      ansible.builtin.command: helm repo add jetstack https://charts.jetstack.io
+      changed_when: false
+
+    - name: Install cert-manager via Helm
+      ansible.builtin.command: >
+        helm upgrade --install cert-manager jetstack/cert-manager
+        --namespace cert-manager
+        --set installCRDs=true
+        --wait
+      changed_when: true
+
+    - name: Create Cloudflare API Token Secret (Direct)
+      ansible.builtin.shell: |
+        kubectl create secret generic cloudflare-api-token-secret \
+          -n cert-manager \
+          --from-literal=api-token={{ cloudflare_api_token }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+      changed_when: true
+      no_log: true
+
+    - name: Create ClusterIssuer for homelab.kenchlightyear.com
+      ansible.builtin.shell: |
+        kubectl apply -f - <<EOF
+        apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-cloudflare
+        spec:
+          acme:
+            email: {{ letsencrypt_email }}
+            server: https://acme-v02.api.letsencrypt.org/directory
+            privateKeySecretRef:
+              name: letsencrypt-cloudflare-account-key
+            solvers:
+              - dns01:
+                  cloudflare:
+                    apiTokenSecretRef:
+                      name: cloudflare-api-token-secret
+                      key: api-token
+                selector:
+                  dnsZones:
+                    - "homelab.kenchlightyear.com"
+        EOF
+      changed_when: true

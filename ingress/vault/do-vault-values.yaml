@@ -1,0 +1,6 @@
+server:
+  standalone:
+    enabled: true
+  dataStorage:
+    enabled: true
+    size: 2Gi

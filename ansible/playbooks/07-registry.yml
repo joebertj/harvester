@@ -3,7 +3,7 @@
 # Installs Harbor Registry via Helm
 
 - name: Deploy Harbor Registry
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

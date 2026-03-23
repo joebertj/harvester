@@ -1,16 +1,29 @@
----
-# Main inventory — all steps run from your local workstation (localhost)
-# The k3s control node is accessed via SSH for kubeconfig fetch only
-
 all:
-  hosts:
-    localhost:
-      ansible_connection: local
-      ansible_python_interpreter: "{{ ansible_playbook_python }}"
+  children:
+    # Harvester Cluster (Primary)
+    harvester:
+      hosts:
+        localhost:
+          ansible_connection: local
+          ansible_python_interpreter: "{{ ansible_playbook_python }}"
+          control_node_ip: "192.168.2.123"
+          control_node_user: "rancher"
+          ssh_key_path: "~/.ssh/klti"
+          kubeconfig_path: "~/.kube/harvester-k3s.yaml"
+          base_domain: "home.kenchlightyear.com"
+          repo_root: "/Users/joebertj/harvester"
+          ingress_dir: "{{ repo_root }}/ingress"
 
-  vars:
-    control_node_ip: "192.168.2.123"
-    control_node_user: "rancher"
-    ssh_key_path: "~/.ssh/klti"
-    kubeconfig_path: "~/.kube/harvester-k3s.yaml"
-    repo_root: "{{ playbook_dir | dirname }}"
+    # DigitalOcean Managed Cluster (Backup)
+    digitalocean:
+      hosts:
+        do-cluster:
+          ansible_connection: local
+          ansible_python_interpreter: "{{ ansible_playbook_python }}"
+          repo_root: "/Users/joebertj/harvester"
+          kubeconfig_path: "{{ repo_root }}/ansible/do-k3s.yaml"
+          cloud_provider: "do"
+          base_domain: "homelab.kenchlightyear.com"
+          homelab_namespace: "homelab"
+          ansible_user: "root"
+          ansible_ssh_private_key_file: "~/.ssh/klti"

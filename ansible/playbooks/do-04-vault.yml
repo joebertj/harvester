@@ -1,0 +1,182 @@
+---
+# do-04-vault.yml
+# Installs Vault on DigitalOcean (DOKS), initializes it, and stores foundational secrets.
+
+- name: Deploy and initialize Vault (DigitalOcean)
+  hosts: digitalocean
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  vars:
+    cloudflare_api_token: "{{ lookup('env', 'CF_API_TOKEN') }}"
+    k3os_password: "{{ lookup('env', 'K3OS_PASSWORD') }}"
+    k3os_token: "{{ lookup('env', 'K3OS_TOKEN') }}"
+    ssh_authorized_key: "{{ lookup('env', 'SSH_AUTHORIZED_KEY') }}"
+    vault_namespace: "vault"
+    # DOKS usually doesn't need specialized storage values if using default PVCs
+    # but we'll use a basic values file
+    vault_values_path: "{{ repo_root }}/ingress/vault/do-vault-values.yaml"
+
+  tasks:
+    - name: Ensure CF_API_TOKEN is provided
+      ansible.builtin.fail:
+        msg: "Missing CF_API_TOKEN. Did you 'source secrets.env'?"
+      when: cloudflare_api_token | length == 0
+
+    - name: Create vault namespace
+      ansible.builtin.command: kubectl create namespace {{ vault_namespace }}
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Add HashiCorp Helm repo
+      ansible.builtin.command: helm repo add hashicorp https://helm.releases.hashicorp.com
+      changed_when: false
+
+    - name: Update Helm repos
+      ansible.builtin.command: helm repo update
+      changed_when: false
+
+    - name: Create basic do-vault-values.yaml if missing
+      ansible.builtin.copy:
+        content: |
+          server:
+            standalone:
+              enabled: true
+            dataStorage:
+              enabled: true
+              size: 2Gi
+        dest: "{{ vault_values_path }}"
+        mode: "0644"
+
+    - name: Check if Vault is already installed
+      ansible.builtin.command: helm status vault -n {{ vault_namespace }}
+      register: vault_status
+      failed_when: false
+      changed_when: false
+
+    - name: Install Vault via Helm
+      ansible.builtin.command: >
+        helm upgrade --install vault hashicorp/vault
+        --namespace {{ vault_namespace }}
+        --values {{ vault_values_path }}
+        --wait
+      when: vault_status.rc != 0
+      changed_when: true
+
+    - name: Wait for Vault pod to be Running
+      ansible.builtin.command: kubectl get pod vault-0 -n {{ vault_namespace }}
+      register: vault_pod_status
+      until: "'Running' in vault_pod_status.stdout"
+      retries: 24
+      delay: 5
+      changed_when: false
+
+    - name: Initialize Vault (if not already)
+      ansible.builtin.shell: |
+        if ! kubectl exec -n {{ vault_namespace }} vault-0 -- vault status -format=json | grep -q '"initialized": true'; then
+          kubectl exec -n {{ vault_namespace }} vault-0 -- \
+          vault operator init -key-shares=1 -key-threshold=1 -format=json > "{{ repo_root }}/ansible/do-vault-init.json"
+          echo "initialized"
+        fi
+      register: vault_init_res
+      changed_when: "'initialized' in vault_init_res.stdout"
+
+    - name: Load init data
+      ansible.builtin.set_fact:
+        init_data: "{{ lookup('file', repo_root + '/ansible/do-vault-init.json') | from_json }}"
+      when: vault_init_res.changed
+
+    - name: Unseal and Login (First Time)
+      ansible.builtin.shell: |
+        kubectl exec -n {{ vault_namespace }} vault-0 -- vault operator unseal {{ init_data.unseal_keys_b64[0] }}
+        kubectl exec -n {{ vault_namespace }} vault-0 -- vault login {{ init_data.root_token }}
+      when: vault_init_res.changed
+      no_log: true
+
+    - name: Enable KV v2 secrets engine
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault secrets enable -path=homelab kv-v2
+      failed_when: false
+      changed_when: false
+
+    - name: Store Cloudflare API token in DO Vault
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault kv put homelab/cloudflare api-token="{{ cloudflare_api_token }}"
+      no_log: true
+      changed_when: true
+
+    - name: Store k3os credentials in DO Vault
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault kv put homelab/k3os
+        password="{{ k3os_password }}"
+        token="{{ k3os_token }}"
+      when: k3os_password | length > 0
+      changed_when: true
+      no_log: true
+
+    - name: Store SSH authorized key in DO Vault
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault kv put homelab/ssh authorized_key="{{ ssh_authorized_key }}"
+      when: ssh_authorized_key | length > 0
+      changed_when: true
+      no_log: true
+
+    - name: Check if Harbor admin password exists in DO Vault
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault kv get -field=admin-password homelab/harbor
+      register: harbor_password_check
+      failed_when: false
+      changed_when: false
+
+    - name: Generate and store Harbor admin password in DO Vault if missing
+      ansible.builtin.shell: |
+        NEW_PASS=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | head -c 16)
+        kubectl exec -n {{ vault_namespace }} vault-0 -- \
+        vault kv put homelab/harbor admin-password="${NEW_PASS}"
+      when: harbor_password_check.rc != 0
+      changed_when: true
+      no_log: true
+
+    - name: Create ESO policy
+      ansible.builtin.shell: |
+        kubectl exec -i -n {{ vault_namespace }} vault-0 -- \
+          vault policy write eso-policy - <<EOF
+        path "homelab/data/cloudflare" { capabilities = ["read"] }
+        path "homelab/data/harbor" { capabilities = ["read"] }
+        path "homelab/data/headlamp" { capabilities = ["read"] }
+        path "homelab/data/k3os" { capabilities = ["read"] }
+        path "homelab/data/ssh" { capabilities = ["read"] }
+        EOF
+      changed_when: true
+
+    - name: Enable Kubernetes auth in DO Vault
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault auth enable kubernetes
+      failed_when: false
+      changed_when: false
+
+    - name: Configure Kubernetes auth for ESO
+      ansible.builtin.shell: |
+        kubectl exec -n {{ vault_namespace }} vault-0 -- \
+          vault write auth/kubernetes/config \
+          kubernetes_host="https://kubernetes.default.svc.cluster.local:443" \
+          disable_iss_validation=true
+      changed_when: true
+
+    - name: Create Kubernetes auth role for ESO
+      ansible.builtin.command: >
+        kubectl exec -n {{ vault_namespace }} vault-0 --
+        vault write auth/kubernetes/role/eso-role
+        bound_service_account_names=external-secrets
+        bound_service_account_namespaces=external-secrets
+        policies=eso-policy
+        ttl=1h
+      changed_when: true

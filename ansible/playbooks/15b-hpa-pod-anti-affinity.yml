@@ -11,7 +11,7 @@
 #   ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml --tags teardown
 
 - name: Deploy HPA Variant B — Pod Anti-Affinity
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

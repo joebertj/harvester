@@ -8,7 +8,7 @@
 #   ansible-playbook -i inventory.yml playbooks/10-headlamp.yml
 
 - name: Deploy Headlamp Kubernetes Dashboard
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

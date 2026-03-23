@@ -3,7 +3,7 @@
 # Checks and installs local prerequisites: helm, kubectl, vault, docker, git, python
 
 - name: Verify and install prerequisites
-  hosts: localhost
+  hosts: harvester
   gather_facts: true
 
   tasks:

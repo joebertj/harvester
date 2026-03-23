@@ -11,7 +11,7 @@
 #     Expect pods to restart. Do not run on a production workload.
 
 - name: Install Cilium CNI (replace Flannel)
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

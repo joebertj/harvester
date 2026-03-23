@@ -1,0 +1,17 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-tls
+  ingress:
+    hosts:
+      core: registry.homelab.kenchlightyear.com
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+externalURL: https://registry.homelab.kenchlightyear.com
+persistence:
+  enabled: true
+  resourcePolicy: "keep"

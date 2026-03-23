@@ -10,7 +10,7 @@
 #     Expect pods to restart. Do not run on a production workload.
 
 - name: Revert to Flannel CNI (remove Cilium)
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

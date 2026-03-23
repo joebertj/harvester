@@ -1,0 +1,75 @@
+---
+# do-08-headlamp.yml
+# Installs Headlamp on DOKS and configures the IngressRoute.
+
+- name: Deploy Headlamp (DigitalOcean)
+  hosts: digitalocean
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Ensure homelab namespace exists
+      ansible.builtin.command: kubectl create namespace {{ homelab_namespace }}
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Add Headlamp Helm repo
+      ansible.builtin.command: helm repo add headlamp https://headlamp-k8s.github.io/headlamp/
+      failed_when: false
+      changed_when: false
+
+    - name: Update Helm repos
+      ansible.builtin.command: helm repo update
+      changed_when: false
+
+    - name: Install Headlamp via Helm
+      ansible.builtin.command: >
+        helm upgrade --install headlamp headlamp/headlamp
+        --namespace {{ homelab_namespace }}
+        --set service.port=80
+        --set-json 'config.sessionTTL=null'
+        --set config.baseURL="/headlamp"
+        --wait
+      changed_when: true
+
+    - name: Create Headlamp Certificate (DigitalOcean)
+      ansible.builtin.shell: |
+        kubectl apply -f - <<EOF
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: headlamp-tls
+          namespace: {{ homelab_namespace }}
+        spec:
+          secretName: headlamp-tls
+          issuerRef:
+            name: letsencrypt-cloudflare
+            kind: ClusterIssuer
+          dnsNames:
+            - headlamp.{{ base_domain }}
+        EOF
+      changed_when: true
+
+    - name: Create Headlamp IngressRoute (DigitalOcean)
+      ansible.builtin.shell: |
+        kubectl apply -f - <<EOF
+        apiVersion: traefik.io/v1alpha1
+        kind: IngressRoute
+        metadata:
+          name: headlamp
+          namespace: {{ homelab_namespace }}
+        spec:
+          entryPoints:
+            - websecure
+          routes:
+            - match: Host(\`headlamp.{{ base_domain }}\`)
+              kind: Rule
+              services:
+                - name: headlamp
+                  port: 80
+          tls:
+            secretName: headlamp-tls
+        EOF
+      changed_when: true

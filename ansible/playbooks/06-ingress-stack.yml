@@ -3,7 +3,7 @@
 # Applies Traefik config, TLS cert, backend services, IngressRoutes, and Homer dashboard
 
 - name: Deploy ingress stack
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

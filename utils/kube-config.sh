@@ -1,30 +1,52 @@
 #!/bin/bash
 # utils/kube-config.sh
-# Fetches the k3s kubeconfig from the control node and sets it up locally.
-#
-# Usage:
-#   ./utils/kube-config.sh              # fetches and writes ~/.kube/harvester-k3s.yaml
-#   source ./utils/kube-config.sh       # also exports KUBECONFIG in your current shell
-#
-# Prerequisites:
-#   - SSH key at ~/.ssh/klti authorized on rancher@192.168.2.123
-#   - kubectl installed locally
+# Persistently switches your default ~/.kube/config to Harvester or DigitalOcean.
 
 set -e
 
-CONTROL_NODE="192.168.2.123"
-SSH_KEY="~/.ssh/klti"
-KUBECONFIG_PATH="$HOME/.kube/harvester-k3s.yaml"
+ENV=${1:-"harvester"}
+KUBECONFIG_DIR="$HOME/.kube"
+HARVESTER_IP="192.168.2.123"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "==> Fetching kubeconfig from $CONTROL_NODE..."
-ssh -i ${SSH_KEY} rancher@${CONTROL_NODE} "sudo cat /etc/rancher/k3s/k3s.yaml" \
-  | sed "s/127.0.0.1/${CONTROL_NODE}/g" \
-  > "${KUBECONFIG_PATH}"
+# 1. Ensure backup exists
+if [ ! -f "${KUBECONFIG_DIR}/config.backup" ] && [ -f "${KUBECONFIG_DIR}/config" ]; then
+    echo "==> Creating backup of ~/.kube/config..."
+    cp "${KUBECONFIG_DIR}/config" "${KUBECONFIG_DIR}/config.backup"
+fi
 
-chmod 600 "${KUBECONFIG_PATH}"
+# 2. Perform the switch
+if [ "$ENV" == "do" ]; then
+    DO_KUBECONFIG_SRC="${REPO_ROOT}/ansible/do-k3s.yaml"
+    if [ ! -f "$DO_KUBECONFIG_SRC" ]; then
+        echo "❌ Error: DigitalOcean kubeconfig not found at $DO_KUBECONFIG_SRC"
+        exit 1
+    fi
+    cp "$DO_KUBECONFIG_SRC" "${KUBECONFIG_DIR}/config"
+    echo "==> Switched DEFAULT to DigitalOcean..."
+else
+    echo "==> Fetching Harvester kubeconfig from ${HARVESTER_IP}..."
+    ssh -i ~/.ssh/klti rancher@${HARVESTER_IP} "sudo cat /etc/rancher/k3s/k3s.yaml" \
+      | sed "s/127.0.0.1/${HARVESTER_IP}/g" \
+      > "${KUBECONFIG_DIR}/config"
+    echo "==> Switched DEFAULT to Harvester..."
+fi
 
-export KUBECONFIG="${KUBECONFIG_PATH}"
-echo "✅ KUBECONFIG set to ${KUBECONFIG_PATH}"
+chmod 600 "${KUBECONFIG_DIR}/config"
+
+# 3. Detect Shell Overrides
+if [ -n "$KUBECONFIG" ] && [ "$KUBECONFIG" != "${KUBECONFIG_DIR}/config" ]; then
+    echo ""
+    echo "⚠️  WARNING: Your current shell has a KUBECONFIG variable set to:"
+    echo "   $KUBECONFIG"
+    echo "   This OVERRIDES the switch I just made."
+    echo ""
+    echo "👉 To fix this, run:  unset KUBECONFIG"
+    echo "   (Or source this script:  source ./utils/kube-config.sh $ENV)"
+    echo ""
+fi
+
+echo "✅ Default cluster is now: $ENV"
 echo ""
 echo "Verifying cluster access..."
 kubectl get nodes

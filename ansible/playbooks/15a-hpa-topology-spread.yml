@@ -11,7 +11,7 @@
 #   ansible-playbook -i inventory.yml playbooks/09a-hpa-topology-spread.yml --tags teardown
 
 - name: Deploy HPA Variant A — Topology Spread
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

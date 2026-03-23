@@ -1,0 +1,19 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+tfplan
+.terraform.lock.hcl
+
+# Kubernetes
+*kubeconfig*
+do-k3s.yaml
+
+# OS files
+.DS_Store
+
+# Ansible
+ansible/inventory-do.yml
+ansible/do-k3s.yaml

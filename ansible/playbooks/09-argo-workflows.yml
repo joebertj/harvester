@@ -4,7 +4,7 @@
 # Configures Ingress access and Homer dashboard integration
 
 - name: Deploy Argo Workflows CI/CD
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

@@ -3,7 +3,7 @@
 # Installs Argo Events (Controller, EventBus)
 
 - name: Deploy Argo Events
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

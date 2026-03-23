@@ -7,7 +7,7 @@
 #   ansible-playbook -i inventory.yml playbooks/09-hpa-common.yml
 
 - name: Deploy Shared HPA Resources
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"

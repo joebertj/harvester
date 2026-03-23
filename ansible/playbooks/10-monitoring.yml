@@ -4,7 +4,7 @@
 # Enables Custom Metrics for HPA
 
 - name: Deploy Monitoring Stack
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
@@ -25,6 +25,7 @@
     - name: Install kube-prometheus-stack
       ansible.builtin.command: >
         helm upgrade --install prometheus prometheus-community/kube-prometheus-stack
+        --version 34.1.1
         --namespace monitoring
         --set grafana.enabled=true
         --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
@@ -35,6 +36,7 @@
     - name: Install Prometheus Adapter
       ansible.builtin.command: >
         helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter
+        --version 3.3.0
         --namespace monitoring
         --values {{ repo_root }}/monitoring/prometheus-adapter-values.yaml
         --wait

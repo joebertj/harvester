@@ -3,7 +3,7 @@
 # Installs Vault via Helm, initializes it, stores all secrets interactively
 
 - name: Deploy and initialize Vault
-  hosts: localhost
+  hosts: harvester
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
