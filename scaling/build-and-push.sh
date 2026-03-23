@@ -24,10 +24,8 @@ HARBOR_PASS=$(kubectl get secret harbor-admin-password -n homelab -o jsonpath='{
 echo "Logging into Harbor..."
 echo "$HARBOR_PASS" | docker login ${REGISTRY} -u admin --password-stdin
 
-echo "Building Docker image..."
-docker build -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR"
-
-echo "Pushing Docker image to ${REGISTRY}..."
-docker push ${REGISTRY}/${IMAGE_NAME}:${TAG}
+echo "Building Docker image (multi-platform linux/amd64)..."
+docker buildx build --platform linux/amd64 -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR" --push
 
 echo "Done! Image pushed to ${REGISTRY}/${IMAGE_NAME}:${TAG}"
+exit 0
