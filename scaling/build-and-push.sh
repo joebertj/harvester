@@ -3,8 +3,7 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REGISTRY="registry.home.kenchlightyear.com"
-IMAGE_NAME="library/scaling-fastapi"
-TAG="latest"
+TAG=$(date +%Y%m%d-%H%M%S)
 
 echo "Checking Docker daemon status..."
 if ! docker info >/dev/null 2>&1; then
@@ -24,8 +23,14 @@ HARBOR_PASS=$(kubectl get secret harbor-admin-password -n homelab -o jsonpath='{
 echo "Logging into Harbor..."
 echo "$HARBOR_PASS" | docker login ${REGISTRY} -u admin --password-stdin
 
-echo "Building Docker image (multi-platform linux/amd64)..."
+echo "Building and pushing multi-platform image with tag: $TAG"
 docker buildx build --platform linux/amd64 -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR" --push
 
-echo "Done! Image pushed to ${REGISTRY}/${IMAGE_NAME}:${TAG}"
+echo "Updating manifest files with new tag..."
+sed -i '' "s|image: ${REGISTRY}/${IMAGE_NAME}:.*|image: ${REGISTRY}/${IMAGE_NAME}:${TAG}|g" "$SCRIPT_DIR"/hpa-*.yaml
+
+echo "Forcing deployment update in cluster..."
+kubectl set image deployment/fastapi-metrics-app fastapi=${REGISTRY}/${IMAGE_NAME}:${TAG} -n harvester-autoscaling-sim
+
+echo "✅ Done! Image ${TAG} pushed and deployment updated."
 exit 0
