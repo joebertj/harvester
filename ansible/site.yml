@@ -11,12 +11,12 @@
 #   ansible-playbook -i inventory.yml site.yml --skip-tags vault
 
 - name: "Step 1 — Setup local kubeconfig"
-  import_playbook: playbooks/01-kubeconfig.yml
-  tags: [kubeconfig]
-
-- name: "Step 2 — Verify prerequisites (helm, kubectl)"
-  import_playbook: playbooks/02-prereqs.yml
+  import_playbook: playbooks/01-prereqs.yml
   tags: [prereqs]
+
+- name: 2. Fetch kubeconfig
+  import_playbook: playbooks/02-kubeconfig.yml
+  tags: [kubeconfig]
 
 - name: "Step 3 — Install cert-manager"
   import_playbook: playbooks/03-cert-manager.yml

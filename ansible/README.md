@@ -26,11 +26,11 @@ You will be prompted interactively for:
 ## Run Individual Steps
 
 ```bash
-# 1. Fetch kubeconfig from control node
-ansible-playbook -i inventory.yml playbooks/01-kubeconfig.yml
+# 1. Check/install helm + kubectl + vault
+ansible-playbook -i inventory.yml playbooks/01-prereqs.yml
 
-# 2. Check/install helm + kubectl
-ansible-playbook -i inventory.yml playbooks/02-prereqs.yml
+# 2. Fetch kubeconfig from control node
+ansible-playbook -i inventory.yml playbooks/02-kubeconfig.yml
 
 # 3. Install cert-manager
 ansible-playbook -i inventory.yml playbooks/03-cert-manager.yml
@@ -71,8 +71,8 @@ ansible/
 ├── group_vars/
 │   └── all.yml                    # Shared variables
 └── playbooks/
-    ├── 01-kubeconfig.yml          # Fetch kubeconfig from 192.168.2.123
-    ├── 02-prereqs.yml             # Check/install helm + kubectl
+    ├── 01-prereqs.yml             # Check/install helm + kubectl + vault
+    ├── 02-kubeconfig.yml          # Fetch kubeconfig from 192.168.2.123
     ├── 03-cert-manager.yml        # Install cert-manager + ClusterIssuer
     ├── 04-vault.yml               # Install + init Vault + store all secrets
     ├── 05-external-secrets.yml    # Install ESO + sync CF token

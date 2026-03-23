@@ -1,0 +1,207 @@
+---
+# 01-prereqs.yml
+# Checks and installs local prerequisites: helm, kubectl, vault, docker, git, python
+
+- name: Verify and install prerequisites
+  hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Check helm is installed
+      ansible.builtin.command: helm version --short
+      register: helm_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install helm (macOS via brew)
+      ansible.builtin.command: brew install helm
+      when:
+        - helm_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Install helm (Linux)
+      ansible.builtin.shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        executable: /bin/bash
+      when:
+        - helm_check.rc != 0
+        - ansible_facts['os_family'] != "Darwin"
+      changed_when: true
+
+    - name: Confirm helm version
+      ansible.builtin.command: helm version --short
+      register: helm_version
+      changed_when: false
+
+    - name: Show helm version
+      ansible.builtin.debug:
+        msg: "✅ {{ helm_version.stdout }}"
+
+    - name: Check kubectl is installed
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install kubectl (macOS via brew)
+      ansible.builtin.command: brew install kubectl
+      when:
+        - kubectl_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Confirm kubectl version
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show kubectl version
+      ansible.builtin.debug:
+        msg: "✅ kubectl is ready"
+
+    - name: Check vault is installed
+      ansible.builtin.command: vault version
+      register: vault_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install vault (macOS via brew)
+      ansible.builtin.command: brew install vault
+      when:
+        - vault_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Install vault (Linux)
+      ansible.builtin.shell: |
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        sudo apt-get update && sudo apt-get install vault
+      args:
+        executable: /bin/bash
+      when:
+        - vault_check.rc != 0
+        - ansible_facts['os_family'] != "Darwin"
+      changed_when: true
+      ignore_errors: true
+
+    - name: Confirm vault version
+      ansible.builtin.command: vault --version
+      register: vault_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show vault version
+      ansible.builtin.debug:
+        msg: "✅ vault is ready"
+
+    - name: Check git is installed
+      ansible.builtin.command: git --version
+      register: git_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install git (macOS via brew)
+      ansible.builtin.command: brew install git
+      when:
+        - git_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Install git (Linux)
+      ansible.builtin.shell: |
+        if command -v apt-get >/dev/null; then sudo apt-get update && sudo apt-get install -y git; fi
+      args:
+        executable: /bin/bash
+      when:
+        - git_check.rc != 0
+        - ansible_facts['os_family'] != "Darwin"
+      changed_when: true
+      ignore_errors: true
+
+    - name: Confirm git version
+      ansible.builtin.command: git --version
+      register: git_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show git version
+      ansible.builtin.debug:
+        msg: "✅ git is ready"
+
+    - name: Check python3 is installed
+      ansible.builtin.command: python3 --version
+      register: python_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install python3 (macOS via brew)
+      ansible.builtin.command: brew install python
+      when:
+        - python_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Install python3 (Linux)
+      ansible.builtin.shell: |
+        if command -v apt-get >/dev/null; then sudo apt-get update && sudo apt-get install -y python3; fi
+      args:
+        executable: /bin/bash
+      when:
+        - python_check.rc != 0
+        - ansible_facts['os_family'] != "Darwin"
+      changed_when: true
+      ignore_errors: true
+
+    - name: Confirm python3 version
+      ansible.builtin.command: python3 --version
+      register: python_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show python3 version
+      ansible.builtin.debug:
+        msg: "✅ python3 is ready"
+
+    - name: Check docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install docker CLI (macOS via brew)
+      ansible.builtin.command: brew install docker
+      when:
+        - docker_check.rc != 0
+        - ansible_facts['os_family'] == "Darwin"
+      changed_when: true
+
+    - name: Install docker (Linux)
+      ansible.builtin.shell: |
+        curl -fsSL https://get.docker.com | sudo sh
+      args:
+        executable: /bin/bash
+      when:
+        - docker_check.rc != 0
+        - ansible_facts['os_family'] != "Darwin"
+      changed_when: true
+      ignore_errors: true
+
+    - name: Confirm docker version
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Show docker version
+      ansible.builtin.debug:
+        msg: "✅ docker is ready"
+
+    - name: Verify cluster is reachable
+      ansible.builtin.command: kubectl cluster-info
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      changed_when: false
