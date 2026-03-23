@@ -159,9 +159,10 @@
           vault policy write eso-policy - <<EOF
         path "homelab/data/cloudflare" { capabilities = ["read"] }
         path "homelab/data/harbor" { capabilities = ["read"] }
-        path "homelab/data/wireguard/*" { capabilities = ["read"] }
-        path "homelab/data/ssh" { capabilities = ["read"] }
+        path "homelab/data/headlamp" { capabilities = ["read"] }
         path "homelab/data/k3os" { capabilities = ["read"] }
+        path "homelab/data/ssh" { capabilities = ["read"] }
+        path "homelab/data/wireguard/*" { capabilities = ["read"] }
         EOF
       args:
         executable: /bin/bash
