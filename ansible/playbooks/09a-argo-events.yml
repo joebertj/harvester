@@ -1,0 +1,39 @@
+---
+# 09a-argo-events.yml
+# Installs Argo Events (Controller, EventBus)
+
+- name: Deploy Argo Events
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Create argo-events namespace
+      ansible.builtin.command: kubectl create namespace argo-events
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Install Argo Events (stable)
+      ansible.builtin.command: >
+        kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-events/stable/manifests/install.yaml
+      changed_when: true
+
+    - name: Deploy Default EventBus
+      ansible.builtin.shell: |
+        cat <<EOF | kubectl apply -f -
+        apiVersion: argoproj.io/v1alpha1
+        kind: EventBus
+        metadata:
+          name: default
+          namespace: argo-events
+        spec:
+          nats:
+            native: {}
+        EOF
+      changed_when: true
+
+    - name: "✅ Argo Events installed"
+      ansible.builtin.debug:
+        msg: "Argo Events components and default EventBus have been deployed."

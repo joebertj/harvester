@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argo-server-cert
+  namespace: argo
+spec:
+  secretName: argo-server-tls
+  issuerRef:
+    name: letsencrypt-cloudflare # Corrected issuer name
+    kind: ClusterIssuer
+  commonName: "*.home.kenchlightyear.com"
+  dnsNames:
+    - "*.home.kenchlightyear.com"

@@ -13,4 +13,4 @@ spec:
         - name: argo-server
           port: 2746
   tls:
-    secretName: cloudflare-api-token-tls
+    secretName: argo-server-tls

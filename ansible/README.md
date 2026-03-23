@@ -59,6 +59,9 @@ ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml
 # 09. Deploy Argo Workflows CI/CD Stack
 ansible-playbook -i inventory.yml playbooks/09-argo-workflows.yml
 
+# 09a. Deploy Argo Events
+ansible-playbook -i inventory.yml playbooks/09a-argo-events.yml
+
 # 15. Deploy HPA Shared Common Resources
 ansible-playbook -i inventory.yml playbooks/15-hpa-common.yml
 

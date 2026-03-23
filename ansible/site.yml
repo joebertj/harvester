@@ -51,10 +51,14 @@
   import_playbook: playbooks/20b-revert-flannel.yml
   tags: [cni, flannel, never]
 
-# ── CI/CD — Argo Workflows ──
+# ── CI/CD — Argo ──
 - name: "Step 09 — Deploy Argo Workflows CI/CD Stack"
   import_playbook: playbooks/09-argo-workflows.yml
   tags: [argo, ci]
+
+- name: "Step 09a — Deploy Argo Events"
+  import_playbook: playbooks/09a-argo-events.yml
+  tags: [argo, events]
 
 # ── HPA Demos (run individually, not part of the standard stack) ──
 - name: "Step 15 — HPA Shared Common Resources (Namespace, Service, HPA)"
