@@ -27,7 +27,7 @@ spec:
         image: gcr.io/kaniko-project/executor:latest
         args:
           - "--context=git://github.com/joebertj/hpa-app.git#refs/heads/{{workflow.parameters.branch}}"
-          - "--destination={{workflow.parameters.image_name}}:{{workflow.runID}}"
+          - "--destination={{workflow.parameters.image_name}}:{{workflow.name}}"
           - "--destination={{workflow.parameters.image_name}}:latest"
           - "--skip-tls-verify" # Internal registry might have self-signed or trust issues
         volumeMounts:
@@ -56,4 +56,4 @@ spec:
               spec:
                 containers:
                   - name: fastapi
-                    image: {{workflow.parameters.image_name}}:{{workflow.runID}}
+                    image: {{workflow.parameters.image_name}}:{{workflow.name}}
