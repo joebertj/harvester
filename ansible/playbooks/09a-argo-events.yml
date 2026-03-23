@@ -34,6 +34,16 @@
         EOF
       changed_when: true
 
-    - name: "✅ Argo Events installed"
+    - name: Apply Harbor ExternalSecret (Sync from Vault)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/argo/harbor-externalsecret.yaml
+      changed_when: true
+
+    - name: Apply HPA App WorkflowTemplate
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/argo/hpa-app-workflow-template.yaml
+      changed_when: true
+
+    - name: "✅ Argo Events and CI templates installed"
       ansible.builtin.debug:
-        msg: "Argo Events components and default EventBus have been deployed."
+        msg: "Argo Events components, Secure Registry Secret (via ESO), and WorkflowTemplate have been deployed."

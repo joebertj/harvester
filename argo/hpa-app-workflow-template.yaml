@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: hpa-app-ci-pipeline
+  namespace: argo
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: repo_url
+        value: "https://github.com/joebertj/hpa-app.git"
+      - name: branch
+        value: "main"
+      - name: image_name
+        value: "registry.home.kenchlightyear.com/library/scaling-fastapi"
+
+  templates:
+    - name: main
+      steps:
+        - - name: build-and-push
+            template: kaniko-build
+        - - name: deploy-update
+            template: deploy-update
+
+    - name: kaniko-build
+      container:
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+          - "--context=git://github.com/joebertj/hpa-app.git#refs/heads/{{workflow.parameters.branch}}"
+          - "--destination={{workflow.parameters.image_name}}:{{workflow.runID}}"
+          - "--destination={{workflow.parameters.image_name}}:latest"
+          - "--skip-tls-verify" # Internal registry might have self-signed or trust issues
+        volumeMounts:
+          - name: registry-config
+            mountPath: /kaniko/.docker/
+      volumes:
+        - name: registry-config
+          secret:
+            secretName: harbor-registry-config
+            items:
+              - key: config.json
+                path: config.json
+
+    - name: deploy-update
+      resource:
+        action: patch
+        mergeStrategy: strategic
+        manifest: |
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: fastapi-metrics-app
+            namespace: harvester-autoscaling-sim
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: fastapi
+                    image: {{workflow.parameters.image_name}}:{{workflow.runID}}
