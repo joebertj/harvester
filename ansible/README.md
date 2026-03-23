@@ -47,6 +47,9 @@ ansible-playbook -i inventory.yml playbooks/06-ingress-stack.yml
 # 7. Deploy Harbor Enterprise Registry
 ansible-playbook -i inventory.yml playbooks/07-registry.yml
 
+# 8. Deploy Headlamp Dashboard (pinned to v0.35.0 for compatibility)
+ansible-playbook -i inventory.yml playbooks/08-headlamp.yml
+
 # 20a. Replace Flannel with Cilium CNI (run LAST — disrupts cluster networking)
 ansible-playbook -i inventory.yml playbooks/20a-install-cilium.yml
 
@@ -93,6 +96,7 @@ ansible/
     ├── 05-external-secrets.yml    # Install ESO + sync CF token
     ├── 06-ingress-stack.yml       # Traefik + TLS + services + Homer
     ├── 07-registry.yml            # Harbor enterprise registry
+    ├── 08-headlamp.yml            # Headlamp Kubernetes dashboard
     ├── 20a-install-cilium.yml         # [LAST] Install Cilium CNI (replace Flannel)
     └── 20b-revert-flannel.yml         # [LAST] Revert to Flannel CNI (remove Cilium)
     ├── 09a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints

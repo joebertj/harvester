@@ -38,6 +38,10 @@
   import_playbook: playbooks/07-registry.yml
   tags: [registry]
 
+- name: "Step 8 — Deploy Headlamp Kubernetes Dashboard"
+  import_playbook: playbooks/08-headlamp.yml
+  tags: [headlamp]
+
 # ── CNI Switching — run LAST, disrupts full cluster networking ──
 - name: "Step 20a — Install Cilium CNI (replace Flannel)"
   import_playbook: playbooks/20a-install-cilium.yml
