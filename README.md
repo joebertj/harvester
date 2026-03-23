@@ -69,10 +69,10 @@ This demo simulates Kubernetes-level **Horizontal Pod Autoscaling (HPA)** using 
 
 | File | Description |
 |---|---|
-| [`hpa-common.yaml`](./hpa-common.yaml) | **Shared base** — Namespace, ConfigMap, Service, HPA |
-| [`hpa-topology-spread.yaml`](./hpa-topology-spread.yaml) | **Variant A** — Deployment with `topologySpreadConstraints` (even pod distribution, `maxSkew: 1`) |
-| [`hpa-pod-anti-affinity.yaml`](./hpa-pod-anti-affinity.yaml) | **Variant B** — Deployment with strict `podAntiAffinity` (1 pod per node, forces new Harvester VM per replica) |
-| [`hpa-taints-tolerations.yaml`](./hpa-taints-tolerations.yaml) | **Variant C** — Deployment restricted to dedicated/tainted nodes using `tolerations` + `nodeAffinity` |
+| [`scaling/hpa-common.yaml`](./scaling/hpa-common.yaml) | **Shared base** — Namespace, Service, HPA |
+| [`scaling/hpa-topology-spread.yaml`](./scaling/hpa-topology-spread.yaml) | **Variant A** — Deployment with `topologySpreadConstraints` (even pod distribution, `maxSkew: 1`) |
+| [`scaling/hpa-pod-anti-affinity.yaml`](./scaling/hpa-pod-anti-affinity.yaml) | **Variant B** — Deployment with strict `podAntiAffinity` (1 pod per node, forces new Harvester VM per replica) |
+| [`scaling/hpa-taints-tolerations.yaml`](./scaling/hpa-taints-tolerations.yaml) | **Variant C** — Deployment restricted to dedicated/tainted nodes using `tolerations` + `nodeAffinity` |
 
 ### How the metric works
 
@@ -88,8 +88,8 @@ Pods are spread evenly across available nodes (max 1 pod skew per node). Multipl
 Harvester provisions new VMs only when existing nodes are **resource-saturated**.
 
 ```bash
-kubectl apply -f hpa-common.yaml
-kubectl apply -f hpa-topology-spread.yaml
+kubectl apply -f scaling/hpa-common.yaml
+kubectl apply -f scaling/hpa-topology-spread.yaml
 ```
 
 ### Variant B — `podAntiAffinity`
@@ -97,8 +97,8 @@ kubectl apply -f hpa-topology-spread.yaml
 Each pod **must** run on a unique node. When HPA scales up beyond available nodes, excess pods go `Pending`, directly triggering Harvester to provision **one new VM per pending pod**.
 
 ```bash
-kubectl apply -f hpa-common.yaml
-kubectl apply -f hpa-pod-anti-affinity.yaml
+kubectl apply -f scaling/hpa-common.yaml
+kubectl apply -f scaling/hpa-pod-anti-affinity.yaml
 ```
 
 ### Variant C — Taints & Tolerations (Dedicated Nodes)
@@ -111,8 +111,8 @@ kubectl taint nodes <worker-node> workload=intensive:NoSchedule
 kubectl label nodes <worker-node> workload=intensive
 
 # 2. Apply the common resources and variant:
-kubectl apply -f hpa-common.yaml
-kubectl apply -f hpa-taints-tolerations.yaml
+kubectl apply -f scaling/hpa-common.yaml
+kubectl apply -f scaling/hpa-taints-tolerations.yaml
 ```
 
 > Pods without the matching toleration will go `Pending` on the tainted node, while the FastAPI pods land exclusively on it.
@@ -134,8 +134,8 @@ kubectl get nodes -w
 
 ```bash
 # Remove the active deployment variant first, then the common resources
-kubectl delete -f hpa-topology-spread.yaml        # or other variant
-kubectl delete -f hpa-common.yaml
+kubectl delete -f scaling/hpa-topology-spread.yaml        # or other variant
+kubectl delete -f scaling/hpa-common.yaml
 
 # For Variant C only — clean up the taint and label from the node:
 kubectl taint nodes <worker-node> workload=intensive:NoSchedule-

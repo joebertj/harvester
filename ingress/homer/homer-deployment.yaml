@@ -25,6 +25,12 @@ spec:
             - name: config
               mountPath: /www/assets/config.yml
               subPath: config.yml
+            - name: assets
+              mountPath: /www/assets/custom.html
+              subPath: custom.html
+            - name: assets
+              mountPath: /www/assets/preview.png
+              subPath: preview.png
           resources:
             requests:
               cpu: "50m"
@@ -42,3 +48,6 @@ spec:
         - name: config
           configMap:
             name: homer-config
+        - name: assets
+          configMap:
+            name: homer-assets

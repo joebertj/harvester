@@ -69,3 +69,21 @@ ssh -i ~/.ssh/klti rancher@<worker-ip> "sudo -E bash ~/manual-join.sh"
 ```
 
 **Note:** This runs `k3s agent` in the foreground. For a permanent fix, write the join config to `/var/lib/rancher/k3os/config.yaml` and reboot the node instead.
+
+---
+
+## `quick-serve-cloud-init.sh` — Serve cloud-init files
+
+A robust HTTP daemon that automatically serves the `cloud-init/` directory on port 80. Used heavily when booting up new bare-metal Harvester VMs to pull their installation configs locally via the network. Prints out exact URLs to paste and gracefully shuts down via `Ctrl+C`.
+
+---
+
+## `backup-secrets.sh` — Sync vaulted secrets to iCloud
+
+Securely copies crucial files (`vault-init.json` and `secrets.env`) from the system directly into your iCloud Drive for permanent encrypted preservation. 
+
+---
+
+## `reload-homer.sh` — Instant Homer Dashboard refresh
+
+Instantly tests and applies the `ingress/homer/homer-configmap.yaml` and forcibly causes a zero-downtime rolling restart of the dashboard pod. Execute whenever adding a new feature or button to your homelab dashboard!

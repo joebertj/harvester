@@ -43,6 +43,9 @@ ansible-playbook -i inventory.yml playbooks/05-external-secrets.yml
 
 # 6. Deploy Traefik + TLS + services + Homer
 ansible-playbook -i inventory.yml playbooks/06-ingress-stack.yml
+
+# 7. Deploy Harbor Enterprise Registry
+ansible-playbook -i inventory.yml playbooks/07-registry.yml
 ```
 
 ## Run by Tag (skip steps)
@@ -73,7 +76,8 @@ ansible/
     ├── 03-cert-manager.yml        # Install cert-manager + ClusterIssuer
     ├── 04-vault.yml               # Install + init Vault + store all secrets
     ├── 05-external-secrets.yml    # Install ESO + sync CF token
-    └── 06-ingress-stack.yml       # Traefik + TLS + services + Homer
+    ├── 06-ingress-stack.yml       # Traefik + TLS + services + Homer
+    └── 07-registry.yml            # Harbor enterprise registry
 ```
 
 ## TODO: Cluster Upgrade Simulation
