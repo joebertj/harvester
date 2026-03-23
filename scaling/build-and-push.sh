@@ -24,7 +24,7 @@ echo "Logging into Harbor..."
 echo "$HARBOR_PASS" | docker login ${REGISTRY} -u admin --password-stdin
 
 echo "Building and pushing multi-platform image with tag: $TAG"
-docker buildx build --platform linux/amd64 -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR" --push
+docker buildx build --platform linux/amd64 -t ${REGISTRY}/${IMAGE_NAME}:${TAG} "$SCRIPT_DIR/../hpa-app" --push
 
 echo "Updating manifest files with new tag..."
 sed -i '' "s|image: ${REGISTRY}/${IMAGE_NAME}:.*|image: ${REGISTRY}/${IMAGE_NAME}:${TAG}|g" "$SCRIPT_DIR"/hpa-*.yaml

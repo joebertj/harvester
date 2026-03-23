@@ -51,19 +51,24 @@
   import_playbook: playbooks/20b-revert-flannel.yml
   tags: [cni, flannel, never]
 
+# ── CI/CD — Tekton ──
+- name: "Step 09 — Deploy Tekton CI/CD Stack"
+  import_playbook: playbooks/09-tekton.yml
+  tags: [tekton, ci]
+
 # ── HPA Demos (run individually, not part of the standard stack) ──
-- name: "Step 09 — HPA Shared Common Resources (Namespace, Service, HPA)"
-  import_playbook: playbooks/09-hpa-common.yml
+- name: "Step 15 — HPA Shared Common Resources (Namespace, Service, HPA)"
+  import_playbook: playbooks/15-hpa-common.yml
   tags: [hpa, hpa-common, never]
 
-- name: "Step 09a — HPA Variant A: topologySpreadConstraints"
-  import_playbook: playbooks/09a-hpa-topology-spread.yml
+- name: "Step 15a — HPA Variant A: topologySpreadConstraints"
+  import_playbook: playbooks/15a-hpa-topology-spread.yml
   tags: [hpa, hpa-a, never]
 
-- name: "Step 09b — HPA Variant B: podAntiAffinity"
-  import_playbook: playbooks/09b-hpa-pod-anti-affinity.yml
+- name: "Step 15b — HPA Variant B: podAntiAffinity"
+  import_playbook: playbooks/15b-hpa-pod-anti-affinity.yml
   tags: [hpa, hpa-b, never]
 
-- name: "Step 09c — HPA Variant C: Taints and Tolerations"
-  import_playbook: playbooks/09c-hpa-taints-tolerations.yml
+- name: "Step 15c — HPA Variant C: Taints and Tolerations"
+  import_playbook: playbooks/15c-hpa-taints-tolerations.yml
   tags: [hpa, hpa-c, never]
