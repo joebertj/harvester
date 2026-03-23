@@ -1,0 +1,44 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    secretName: "home-kenchlightyear-tls"
+  ingress:
+    hosts:
+      core: registry.home.kenchlightyear.com
+    className: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+
+externalURL: https://registry.home.kenchlightyear.com
+
+existingSecretAdminPassword: "harbor-admin-password"
+existingSecretAdminPasswordKey: "HARBOR_ADMIN_PASSWORD"
+
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    registry:
+      size: 20Gi
+      storageClass: "local-path"
+    jobservice:
+      size: 1Gi
+      storageClass: "local-path"
+    database:
+      size: 5Gi
+      storageClass: "local-path"
+    redis:
+      size: 1Gi
+      storageClass: "local-path"
+    trivy:
+      size: 5Gi
+      storageClass: "local-path"
+
+trivy:
+  enabled: true
+
+notary:
+  enabled: false
+
+chartmuseum:
+  enabled: false

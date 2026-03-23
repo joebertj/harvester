@@ -69,8 +69,15 @@ data:
             target: "_blank"
 
           - name: "Vault"
-            logo: "https://www.vaultproject.io/img/logo-hashicorp.svg"
+            icon: "fas fa-key"
             subtitle: "Secrets management"
             tag: "security"
             url: "https://vault.home.kenchlightyear.com"
+            target: "_blank"
+
+          - name: "Harbor"
+            logo: "https://goharbor.io/img/logos/harbor-icon-color.png"
+            subtitle: "Enterprise container registry"
+            tag: "infrastructure"
+            url: "https://registry.home.kenchlightyear.com"
             target: "_blank"

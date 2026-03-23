@@ -44,16 +44,10 @@ spec:
             topologyKey: kubernetes.io/hostname
       containers:
       - name: fastapi
-        image: python:3.11-slim
-        command: ["/bin/sh", "-c"]
-        args:
-        - "pip install fastapi uvicorn prometheus-client numpy && python /app/main.py"
+        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
         ports:
         - containerPort: 8000
           name: http
-        volumeMounts:
-        - name: script-volume
-          mountPath: /app
         resources:
           requests:
             cpu: "100m"
@@ -61,7 +55,3 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
-      volumes:
-      - name: script-volume
-        configMap:
-          name: fastapi-metrics-script

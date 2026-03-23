@@ -1,31 +1,47 @@
 ---
 # 07-registry.yml
-# Applies Kubernetes registry manifests
+# Installs Harbor Registry via Helm
 
-- name: Deploy Local Registry
+- name: Deploy Harbor Registry
   hosts: localhost
   gather_facts: false
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
-    - name: Apply registry backend manifests (Deployment, PVC, Service)
-      ansible.builtin.command: >
-        kubectl apply -f {{ ingress_dir }}/registry/
-      changed_when: true
-
-    - name: Apply registry IngressRoute
-      ansible.builtin.command: >
-        kubectl apply -f {{ ingress_dir }}/routes/registry-ingressroute.yaml
-      changed_when: true
-
-    - name: Wait for Registry to become ready
-      ansible.builtin.command: >
-        kubectl rollout status deployment/registry -n {{ homelab_namespace }}
+    - name: Add Harbor Helm repo
+      ansible.builtin.command: helm repo add harbor https://helm.goharbor.io
       changed_when: false
 
-    - name: "✅ Local Registry deployed"
+    - name: Update Helm repos
+      ansible.builtin.command: helm repo update
+      changed_when: false
+
+    - name: Apply Harbor ExternalSecret
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/harbor/harbor-externalsecret.yaml
+      changed_when: true
+
+    - name: Wait for Harbor ExternalSecret to sync
+      ansible.builtin.command: >
+        kubectl wait externalsecret harbor-admin-password
+        -n {{ homelab_namespace }}
+        --for=condition=Ready
+        --timeout=60s
+      changed_when: false
+
+    - name: Install Harbor via Helm
+      ansible.builtin.command: >
+        helm upgrade --install harbor harbor/harbor
+        --namespace {{ homelab_namespace }}
+        --values {{ ingress_dir }}/harbor/harbor-values.yaml
+        --wait
+      register: harbor_install
+      changed_when: true
+
+    - name: "✅ Harbor Registry deployed"
       ansible.builtin.debug:
         msg: |
-          Registry is active! Reachable at:
+          Harbor is active! Reachable at:
           https://registry.{{ base_domain }}
+          Secured via Vault & ExternalSecrets!
