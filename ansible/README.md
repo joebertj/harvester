@@ -47,6 +47,12 @@ ansible-playbook -i inventory.yml playbooks/06-ingress-stack.yml
 # 7. Deploy Harbor Enterprise Registry
 ansible-playbook -i inventory.yml playbooks/07-registry.yml
 
+# 8a. Replace Flannel with Cilium CNI
+ansible-playbook -i inventory.yml playbooks/08a-install-cilium.yml
+
+# 8b. Revert from Cilium back to Flannel
+ansible-playbook -i inventory.yml playbooks/08b-revert-flannel.yml
+
 # 9a. HPA Variant A — topologySpreadConstraints
 ansible-playbook -i inventory.yml playbooks/09a-hpa-topology-spread.yml
 
@@ -87,6 +93,8 @@ ansible/
     ├── 05-external-secrets.yml    # Install ESO + sync CF token
     ├── 06-ingress-stack.yml       # Traefik + TLS + services + Homer
     ├── 07-registry.yml            # Harbor enterprise registry
+    ├── 08a-install-cilium.yml         # Install Cilium CNI (replace Flannel)
+    ├── 08b-revert-flannel.yml         # Revert to Flannel CNI (remove Cilium)
     ├── 09a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints
     ├── 09b-hpa-pod-anti-affinity.yml  # HPA Variant B: podAntiAffinity
     └── 09c-hpa-taints-tolerations.yml # HPA Variant C: Taints & Tolerations

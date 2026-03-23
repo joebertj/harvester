@@ -38,6 +38,15 @@
   import_playbook: playbooks/07-registry.yml
   tags: [registry]
 
+# ── CNI Switching (run individually) ──
+- name: "Step 8a — Install Cilium CNI (replace Flannel)"
+  import_playbook: playbooks/08a-install-cilium.yml
+  tags: [cni, cilium, never]
+
+- name: "Step 8b — Revert to Flannel CNI (remove Cilium)"
+  import_playbook: playbooks/08b-revert-flannel.yml
+  tags: [cni, flannel, never]
+
 # ── HPA Demos (run individually, not part of the standard stack) ──
 - name: "Step 9a — HPA Variant A: topologySpreadConstraints"
   import_playbook: playbooks/09a-hpa-topology-spread.yml

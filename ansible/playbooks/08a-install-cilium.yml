@@ -1,0 +1,95 @@
+---
+# 08a-install-cilium.yml
+# Replaces the default k3s Flannel CNI with Cilium via Helm.
+# This provides eBPF-based networking, network policies, observability (Hubble),
+# and enhanced security over the default Flannel CNI.
+#
+# Usage:
+#   ansible-playbook -i inventory.yml playbooks/08a-install-cilium.yml
+#
+# ⚠️  This will briefly disrupt cluster networking during the CNI swap.
+#     Expect pods to restart. Do not run on a production workload.
+
+- name: Install Cilium CNI (replace Flannel)
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Disable Flannel on the k3s control node via SSH
+      ansible.builtin.shell: |
+        ssh -i {{ ssh_key_path }} -o StrictHostKeyChecking=no \
+          {{ control_node_user }}@{{ control_node_ip }} \
+          "sudo sed -i 's|--flannel-backend=vxlan||g' /etc/systemd/system/k3s.service || true && \
+           sudo bash -c 'cat >> /etc/rancher/k3s/config.yaml << EOF
+flannel-backend: none
+disable-network-policy: true
+EOF' && \
+           sudo systemctl daemon-reload && \
+           sudo systemctl restart k3s"
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Wait for k3s API to become available again
+      ansible.builtin.command: kubectl cluster-info
+      register: cluster_ready
+      until: cluster_ready.rc == 0
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    - name: Delete existing Flannel DaemonSet if present
+      ansible.builtin.command: >
+        kubectl delete daemonset kube-flannel-ds -n kube-system
+      failed_when: false
+      changed_when: true
+
+    - name: Add Cilium Helm repo
+      ansible.builtin.command: helm repo add cilium https://helm.cilium.io
+      changed_when: false
+
+    - name: Update Helm repos
+      ansible.builtin.command: helm repo update
+      changed_when: false
+
+    - name: Install Cilium via Helm
+      ansible.builtin.command: >
+        helm upgrade --install cilium cilium/cilium
+        --namespace kube-system
+        --set operator.replicas=1
+        --set ipam.mode=kubernetes
+        --set kubeProxyReplacement=partial
+        --set hostServices.enabled=false
+        --set externalIPs.enabled=true
+        --set nodePort.enabled=true
+        --set hostPort.enabled=true
+        --set bpf.masquerade=false
+        --set image.pullPolicy=IfNotPresent
+        --wait
+      changed_when: true
+
+    - name: Wait for Cilium DaemonSet to be ready
+      ansible.builtin.command: >
+        kubectl rollout status daemonset/cilium -n kube-system --timeout=180s
+      changed_when: false
+
+    - name: Restart all non-system pods to reattach to Cilium networking
+      ansible.builtin.shell: |
+        kubectl get pods -A --field-selector=metadata.namespace!=kube-system \
+          -o json | jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' | \
+        while read ns pod; do
+          kubectl delete pod "$pod" -n "$ns" --grace-period=0 2>/dev/null || true
+        done
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: "✅ Cilium installed"
+      ansible.builtin.debug:
+        msg: |
+          Cilium CNI is now active!
+          Check status: kubectl get pods -n kube-system -l k8s-app=cilium
+          Connectivity test: kubectl exec -n kube-system ds/cilium -- cilium status
+          To revert to Flannel: ansible-playbook -i inventory.yml playbooks/08b-revert-flannel.yml
