@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argo-server
+  namespace: argo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`argo.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: argo-server
+          port: 2746
+  tls:
+    secretName: cloudflare-api-token-tls

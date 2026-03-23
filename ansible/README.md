@@ -56,8 +56,8 @@ ansible-playbook -i inventory.yml playbooks/20a-install-cilium.yml
 # 20b. Revert from Cilium back to Flannel
 ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml
 
-# 09. Deploy Tekton CI/CD Stack
-ansible-playbook -i inventory.yml playbooks/09-tekton.yml
+# 09. Deploy Argo Workflows CI/CD Stack
+ansible-playbook -i inventory.yml playbooks/09-argo-workflows.yml
 
 # 15. Deploy HPA Shared Common Resources
 ansible-playbook -i inventory.yml playbooks/15-hpa-common.yml

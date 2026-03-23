@@ -1,0 +1,46 @@
+---
+# 09-argo-workflows.yml
+# Installs Argo Workflows (Controller, Server, CLI)
+# Configures Ingress access and Homer dashboard integration
+
+- name: Deploy Argo Workflows CI/CD
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Create argo namespace
+      ansible.builtin.command: kubectl create namespace argo
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Install Argo Workflows (v3.5.0 stable)
+      ansible.builtin.command: >
+        kubectl apply -f https://github.com/argoproj/argo-workflows/releases/download/v3.5.0/install.yaml -n argo
+      changed_when: true
+
+    - name: Configure Argo Server auth-mode (homelab-wide access)
+      ansible.builtin.command: >
+        kubectl patch deployment argo-server -n argo --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--auth-mode=server"}]'
+      changed_when: true
+
+    - name: Apply Argo IngressRoute
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/ingress/routes/argo-ingressroute.yaml
+      changed_when: true
+
+    - name: Update Homer dashboard with Argo Workflows
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/ingress/homer/homer-configmap.yaml
+      changed_when: true
+
+    - name: Refresh Homer pod
+      ansible.builtin.command: >
+        kubectl rollout restart deployment/homer -n {{ homelab_namespace }}
+      changed_when: true
+
+    - name: "✅ Argo Workflows installed"
+      ansible.builtin.debug:
+        msg: "Argo Workflows has been deployed. Dashboard available at https://argo.home.kenchlightyear.com"

@@ -82,11 +82,11 @@ data:
             url: "https://registry.home.kenchlightyear.com"
             target: "_blank"
 
-          - name: "Tekton"
-            logo: "https://tekton.dev/images/tekton-horizontal-color.png"
-            subtitle: "CI/CD Pipelines"
+          - name: "Argo Workflows"
+            logo: "https://raw.githubusercontent.com/argoproj/argo-workflows/main/docs/assets/argo.png"
+            subtitle: "Modern CI/CD Engine"
             tag: "cicd"
-            url: "https://tekton.home.kenchlightyear.com"
+            url: "https://argo.home.kenchlightyear.com"
             target: "_blank"
 
           - name: "Headlamp"
