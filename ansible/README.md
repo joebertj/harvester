@@ -56,17 +56,20 @@ ansible-playbook -i inventory.yml playbooks/20a-install-cilium.yml
 # 20b. Revert from Cilium back to Flannel
 ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml
 
-# 09. Deploy HPA Shared Common Resources
-ansible-playbook -i inventory.yml playbooks/09-hpa-common.yml
+# 09. Deploy Tekton CI/CD Stack
+ansible-playbook -i inventory.yml playbooks/09-tekton.yml
 
-# 09a. HPA Variant A — topologySpreadConstraints
-ansible-playbook -i inventory.yml playbooks/09a-hpa-topology-spread.yml
+# 15. Deploy HPA Shared Common Resources
+ansible-playbook -i inventory.yml playbooks/15-hpa-common.yml
 
-# 09b. HPA Variant B — podAntiAffinity
-ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml
+# 15a. HPA Variant A — topologySpreadConstraints
+ansible-playbook -i inventory.yml playbooks/15a-hpa-topology-spread.yml
 
-# 09c. HPA Variant C — Taints & Tolerations (pass dedicated node name)
-ansible-playbook -i inventory.yml playbooks/09c-hpa-taints-tolerations.yml -e dedicated_node=<worker-node>
+# 15b. HPA Variant B — podAntiAffinity
+ansible-playbook -i inventory.yml playbooks/15b-hpa-pod-anti-affinity.yml
+
+# 15c. HPA Variant C — Taints & Tolerations (pass dedicated node name)
+ansible-playbook -i inventory.yml playbooks/15c-hpa-taints-tolerations.yml -e dedicated_node=<worker-node>
 ```
 
 ## Run by Tag (skip steps)
@@ -102,10 +105,13 @@ ansible/
     ├── 08-headlamp.yml            # Headlamp Kubernetes dashboard
     ├── 20a-install-cilium.yml         # [LAST] Install Cilium CNI (replace Flannel)
     └── 20b-revert-flannel.yml         # [LAST] Revert to Flannel CNI (remove Cilium)
-    ├── 09-hpa-common.yml              # HPA Shared Common Resources
-    ├── 09a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints
-    ├── 09b-hpa-pod-anti-affinity.yml  # HPA Variant B: podAntiAffinity
-    └── 09c-hpa-taints-tolerations.yml # HPA Variant C: Taints & Tolerations
+    ├── 09-tekton.yml                  # Tekton CI/CD Stack
+    ├── 20a-install-cilium.yml         # [LAST] Install Cilium CNI (replace Flannel)
+    └── 20b-revert-flannel.yml         # [LAST] Revert to Flannel CNI (remove Cilium)
+    ├── 15-hpa-common.yml              # HPA Shared Common Resources
+    ├── 15a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints
+    ├── 15b-hpa-pod-anti-affinity.yml  # HPA Variant B: podAntiAffinity
+    └── 15c-hpa-taints-tolerations.yml # HPA Variant C: Taints & Tolerations
 ```
 
 ## TODO: Cluster Upgrade Simulation
