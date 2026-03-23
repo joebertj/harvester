@@ -1,0 +1,16 @@
+prometheus:
+  url: http://prometheus-operated.monitoring.svc.cluster.local
+  port: 9090
+
+rules:
+  default: false
+  custom:
+    - seriesQuery: '{__name__=~"^simulated_user_load.*"}'
+      resources:
+        overrides:
+          kubernetes_namespace: {resource: "namespace"}
+          kubernetes_pod_name: {resource: "pod"}
+      name:
+        matches: "^(.*)"
+        as: "simulated_user_load"
+      metricsQuery: 'sum(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
