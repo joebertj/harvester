@@ -46,6 +46,15 @@ ansible-playbook -i inventory.yml playbooks/06-ingress-stack.yml
 
 # 7. Deploy Harbor Enterprise Registry
 ansible-playbook -i inventory.yml playbooks/07-registry.yml
+
+# 9a. HPA Variant A — topologySpreadConstraints
+ansible-playbook -i inventory.yml playbooks/09a-hpa-topology-spread.yml
+
+# 9b. HPA Variant B — podAntiAffinity
+ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml
+
+# 9c. HPA Variant C — Taints & Tolerations (pass dedicated node name)
+ansible-playbook -i inventory.yml playbooks/09c-hpa-taints-tolerations.yml -e dedicated_node=<worker-node>
 ```
 
 ## Run by Tag (skip steps)
@@ -77,7 +86,10 @@ ansible/
     ├── 04-vault.yml               # Install + init Vault + store all secrets
     ├── 05-external-secrets.yml    # Install ESO + sync CF token
     ├── 06-ingress-stack.yml       # Traefik + TLS + services + Homer
-    └── 07-registry.yml            # Harbor enterprise registry
+    ├── 07-registry.yml            # Harbor enterprise registry
+    ├── 09a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints
+    ├── 09b-hpa-pod-anti-affinity.yml  # HPA Variant B: podAntiAffinity
+    └── 09c-hpa-taints-tolerations.yml # HPA Variant C: Taints & Tolerations
 ```
 
 ## TODO: Cluster Upgrade Simulation

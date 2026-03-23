@@ -1,0 +1,108 @@
+---
+# 09c-hpa-taints-tolerations.yml
+# Deploys HPA Variant C — Taints & Tolerations (Dedicated Nodes)
+# Only FastAPI pods can schedule on tainted/labelled nodes.
+# All other workloads are blocked from those dedicated worker VMs.
+#
+# Usage:
+#   # 1. First taint and label your target worker node(s):
+#   kubectl taint nodes <worker-node> workload=intensive:NoSchedule
+#   kubectl label nodes <worker-node> workload=intensive
+#
+#   # 2. Then run this playbook:
+#   ansible-playbook -i inventory.yml playbooks/09c-hpa-taints-tolerations.yml
+#
+# Tear down:
+#   ansible-playbook -i inventory.yml playbooks/09c-hpa-taints-tolerations.yml --tags teardown
+
+- name: Deploy HPA Variant C — Taints and Tolerations
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  vars:
+    dedicated_node: ""   # ⚠️ Override via -e dedicated_node=<worker-node-name>
+
+  tasks:
+    - name: Warn if dedicated_node is not set
+      ansible.builtin.debug:
+        msg: |
+          ⚠️  'dedicated_node' is not set!
+          Run with: -e dedicated_node=<your-worker-node-name>
+          Skipping taint/label steps.
+      when: dedicated_node == ""
+
+    - name: Taint dedicated node
+      ansible.builtin.command: >
+        kubectl taint nodes {{ dedicated_node }} workload=intensive:NoSchedule --overwrite
+      when: dedicated_node != ""
+      changed_when: true
+      tags: [deploy]
+
+    - name: Label dedicated node
+      ansible.builtin.command: >
+        kubectl label nodes {{ dedicated_node }} workload=intensive --overwrite
+      when: dedicated_node != ""
+      changed_when: true
+      tags: [deploy]
+
+    - name: Apply shared HPA resources (Namespace, Service, HPA)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
+      changed_when: true
+      tags: [deploy]
+
+    - name: Apply Variant C — Taints and Tolerations Deployment
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/scaling/hpa-taints-tolerations.yaml
+      changed_when: true
+      tags: [deploy]
+
+    - name: Wait for Deployment to be ready
+      ansible.builtin.command: >
+        kubectl rollout status deployment/fastapi-metrics-app
+        -n harvester-autoscaling-sim
+        --timeout=120s
+      changed_when: false
+      tags: [deploy]
+
+    - name: "✅ Variant C deployed"
+      ansible.builtin.debug:
+        msg: |
+          HPA Variant C (Taints & Tolerations) is live!
+          FastAPI pods are running exclusively on tainted/dedicated nodes.
+          Watch pods:    kubectl get pods -n harvester-autoscaling-sim -w
+          Watch HPA:     kubectl get hpa -n harvester-autoscaling-sim -w
+          Watch nodes:   kubectl get nodes -w
+      tags: [deploy]
+
+    - name: Tear down Variant C Deployment
+      ansible.builtin.command: >
+        kubectl delete -f {{ repo_root }}/scaling/hpa-taints-tolerations.yaml
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]
+
+    - name: Tear down shared HPA resources
+      ansible.builtin.command: >
+        kubectl delete -f {{ repo_root }}/scaling/hpa-common.yaml
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]
+
+    - name: Remove taint from dedicated node
+      ansible.builtin.command: >
+        kubectl taint nodes {{ dedicated_node }} workload=intensive:NoSchedule-
+      when: dedicated_node != ""
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]
+
+    - name: Remove label from dedicated node
+      ansible.builtin.command: >
+        kubectl label nodes {{ dedicated_node }} workload-
+      when: dedicated_node != ""
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]

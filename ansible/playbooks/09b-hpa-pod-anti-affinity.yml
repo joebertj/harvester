@@ -1,0 +1,62 @@
+---
+# 09b-hpa-pod-anti-affinity.yml
+# Deploys HPA Variant B — podAntiAffinity
+# Each pod must run on a unique node. When HPA scales up beyond available nodes,
+# pods go Pending — directly triggering Harvester to provision one new VM per pending pod.
+#
+# Usage:
+#   ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml
+#
+# Tear down:
+#   ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml --tags teardown
+
+- name: Deploy HPA Variant B — Pod Anti-Affinity
+  hosts: localhost
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  tasks:
+    - name: Apply shared HPA resources (Namespace, Service, HPA)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
+      changed_when: true
+      tags: [deploy]
+
+    - name: Apply Variant B — podAntiAffinity Deployment
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/scaling/hpa-pod-anti-affinity.yaml
+      changed_when: true
+      tags: [deploy]
+
+    - name: Wait for Deployment to be ready
+      ansible.builtin.command: >
+        kubectl rollout status deployment/fastapi-metrics-app
+        -n harvester-autoscaling-sim
+        --timeout=120s
+      changed_when: false
+      tags: [deploy]
+
+    - name: "✅ Variant B deployed"
+      ansible.builtin.debug:
+        msg: |
+          HPA Variant B (podAntiAffinity) is live!
+          Each pod requires its own unique node. Pending pods will trigger Harvester VM provisioning.
+          Watch pods:    kubectl get pods -n harvester-autoscaling-sim -w
+          Watch HPA:     kubectl get hpa -n harvester-autoscaling-sim -w
+          Watch nodes:   kubectl get nodes -w
+      tags: [deploy]
+
+    - name: Tear down Variant B Deployment
+      ansible.builtin.command: >
+        kubectl delete -f {{ repo_root }}/scaling/hpa-pod-anti-affinity.yaml
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]
+
+    - name: Tear down shared HPA resources
+      ansible.builtin.command: >
+        kubectl delete -f {{ repo_root }}/scaling/hpa-common.yaml
+      failed_when: false
+      changed_when: true
+      tags: [teardown, never]

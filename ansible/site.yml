@@ -37,3 +37,16 @@
 - name: "Step 7 — Deploy local container registry"
   import_playbook: playbooks/07-registry.yml
   tags: [registry]
+
+# ── HPA Demos (run individually, not part of the standard stack) ──
+- name: "Step 9a — HPA Variant A: topologySpreadConstraints"
+  import_playbook: playbooks/09a-hpa-topology-spread.yml
+  tags: [hpa, hpa-a, never]
+
+- name: "Step 9b — HPA Variant B: podAntiAffinity"
+  import_playbook: playbooks/09b-hpa-pod-anti-affinity.yml
+  tags: [hpa, hpa-b, never]
+
+- name: "Step 9c — HPA Variant C: Taints and Tolerations"
+  import_playbook: playbooks/09c-hpa-taints-tolerations.yml
+  tags: [hpa, hpa-c, never]
