@@ -17,12 +17,6 @@
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
-    - name: Apply shared HPA resources (Namespace, Service, HPA)
-      ansible.builtin.command: >
-        kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
-      changed_when: true
-      tags: [deploy]
-
     - name: Apply Variant B — podAntiAffinity Deployment
       ansible.builtin.command: >
         kubectl apply -f {{ repo_root }}/scaling/hpa-pod-anti-affinity.yaml

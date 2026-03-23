@@ -47,12 +47,6 @@
       changed_when: true
       tags: [deploy]
 
-    - name: Apply shared HPA resources (Namespace, Service, HPA)
-      ansible.builtin.command: >
-        kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
-      changed_when: true
-      tags: [deploy]
-
     - name: Apply Variant C — Taints and Tolerations Deployment
       ansible.builtin.command: >
         kubectl apply -f {{ repo_root }}/scaling/hpa-taints-tolerations.yaml

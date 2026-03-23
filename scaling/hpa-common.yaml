@@ -1,13 +1,11 @@
 # -------------------------------------------------------
-# Common resources shared by both HPA deployment variants:
+# Common resources shared by all HPA deployment variants:
 #   - hpa-topology-spread.yaml   (topologySpreadConstraints)
 #   - hpa-pod-anti-affinity.yaml (podAntiAffinity)
+#   - hpa-taints-tolerations.yaml (Taints/Tolerations)
 #
-# Apply this file first, then apply one of the variant files.
 # Usage:
 #   kubectl apply -f hpa-common.yaml
-#   kubectl apply -f hpa-topology-spread.yaml   # OR
-#   kubectl apply -f hpa-pod-anti-affinity.yaml
 # -------------------------------------------------------
 
 apiVersion: v1
@@ -15,7 +13,7 @@ kind: Namespace
 metadata:
   name: harvester-autoscaling-sim
 
-
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -33,7 +31,7 @@ spec:
       name: http
 
 ---
-apiVersion: autoscaling/v2
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   name: fastapi-metrics-hpa

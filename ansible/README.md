@@ -56,13 +56,16 @@ ansible-playbook -i inventory.yml playbooks/20a-install-cilium.yml
 # 20b. Revert from Cilium back to Flannel
 ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml
 
-# 9a. HPA Variant A — topologySpreadConstraints
+# 09. Deploy HPA Shared Common Resources
+ansible-playbook -i inventory.yml playbooks/09-hpa-common.yml
+
+# 09a. HPA Variant A — topologySpreadConstraints
 ansible-playbook -i inventory.yml playbooks/09a-hpa-topology-spread.yml
 
-# 9b. HPA Variant B — podAntiAffinity
+# 09b. HPA Variant B — podAntiAffinity
 ansible-playbook -i inventory.yml playbooks/09b-hpa-pod-anti-affinity.yml
 
-# 9c. HPA Variant C — Taints & Tolerations (pass dedicated node name)
+# 09c. HPA Variant C — Taints & Tolerations (pass dedicated node name)
 ansible-playbook -i inventory.yml playbooks/09c-hpa-taints-tolerations.yml -e dedicated_node=<worker-node>
 ```
 
@@ -99,6 +102,7 @@ ansible/
     ├── 08-headlamp.yml            # Headlamp Kubernetes dashboard
     ├── 20a-install-cilium.yml         # [LAST] Install Cilium CNI (replace Flannel)
     └── 20b-revert-flannel.yml         # [LAST] Revert to Flannel CNI (remove Cilium)
+    ├── 09-hpa-common.yml              # HPA Shared Common Resources
     ├── 09a-hpa-topology-spread.yml    # HPA Variant A: topologySpreadConstraints
     ├── 09b-hpa-pod-anti-affinity.yml  # HPA Variant B: podAntiAffinity
     └── 09c-hpa-taints-tolerations.yml # HPA Variant C: Taints & Tolerations
