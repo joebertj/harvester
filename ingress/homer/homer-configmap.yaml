@@ -81,3 +81,17 @@ data:
             tag: "infrastructure"
             url: "https://registry.home.kenchlightyear.com"
             target: "_blank"
+
+          - name: "Headlamp"
+            logo: "https://headlamp.dev/img/logo.svg"
+            subtitle: "Kubernetes cluster explorer"
+            tag: "observability"
+            url: "https://headlamp.home.kenchlightyear.com"
+            target: "_blank"
+
+          - name: "Hubble"
+            logo: "https://raw.githubusercontent.com/cilium/hubble/master/Documentation/images/hubble_logo.png"
+            subtitle: "Cilium network observability (active with 20a)"
+            tag: "observability"
+            url: "https://hubble.home.kenchlightyear.com"
+            target: "_blank"

@@ -21,6 +21,12 @@
       failed_when: false
       changed_when: true
 
+    - name: Remove Hubble UI IngressRoute
+      ansible.builtin.command: >
+        kubectl delete -f {{ ingress_dir }}/routes/hubble-ingressroute.yaml
+      failed_when: false
+      changed_when: true
+
     - name: Delete Cilium CRDs and resources
       ansible.builtin.shell: |
         kubectl delete daemonset cilium -n kube-system --ignore-not-found=true

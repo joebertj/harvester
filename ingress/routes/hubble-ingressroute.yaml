@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hubble-ui
+  namespace: kube-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hubble.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: hubble-ui
+          port: 80
+  tls:
+    secretName: home-kenchlightyear-tls

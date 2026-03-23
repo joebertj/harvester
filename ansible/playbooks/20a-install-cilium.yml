@@ -54,7 +54,7 @@ EOF' && \
       ansible.builtin.command: helm repo update
       changed_when: false
 
-    - name: Install Cilium via Helm
+    - name: Install Cilium via Helm (with Hubble enabled)
       ansible.builtin.command: >
         helm upgrade --install cilium cilium/cilium
         --namespace kube-system
@@ -67,7 +67,15 @@ EOF' && \
         --set hostPort.enabled=true
         --set bpf.masquerade=false
         --set image.pullPolicy=IfNotPresent
+        --set hubble.enabled=true
+        --set hubble.relay.enabled=true
+        --set hubble.ui.enabled=true
         --wait
+      changed_when: true
+
+    - name: Apply Hubble UI IngressRoute
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/routes/hubble-ingressroute.yaml
       changed_when: true
 
     - name: Wait for Cilium DaemonSet to be ready
@@ -86,10 +94,11 @@ EOF' && \
         executable: /bin/bash
       changed_when: true
 
-    - name: "✅ Cilium installed"
+    - name: "✅ Cilium + Hubble installed"
       ansible.builtin.debug:
         msg: |
-          Cilium CNI is now active!
-          Check status: kubectl get pods -n kube-system -l k8s-app=cilium
-          Connectivity test: kubectl exec -n kube-system ds/cilium -- cilium status
+          Cilium CNI is now active with Hubble network observability!
+          Check status:      kubectl get pods -n kube-system -l k8s-app=cilium
+          Hubble UI:         https://hubble.{{ base_domain }}
+          Cilium status:     kubectl exec -n kube-system ds/cilium -- cilium status
           To revert to Flannel: ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml

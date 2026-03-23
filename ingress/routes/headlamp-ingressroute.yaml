@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headlamp
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`headlamp.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: headlamp
+          port: 80
+  tls:
+    secretName: home-kenchlightyear-tls
