@@ -1,5 +1,5 @@
 ---
-# 08a-install-cilium.yml
+# 20a-install-cilium.yml
 # Replaces the default k3s Flannel CNI with Cilium via Helm.
 # This provides eBPF-based networking, network policies, observability (Hubble),
 # and enhanced security over the default Flannel CNI.
@@ -92,4 +92,4 @@ EOF' && \
           Cilium CNI is now active!
           Check status: kubectl get pods -n kube-system -l k8s-app=cilium
           Connectivity test: kubectl exec -n kube-system ds/cilium -- cilium status
-          To revert to Flannel: ansible-playbook -i inventory.yml playbooks/08b-revert-flannel.yml
+          To revert to Flannel: ansible-playbook -i inventory.yml playbooks/20b-revert-flannel.yml

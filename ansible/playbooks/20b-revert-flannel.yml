@@ -1,5 +1,5 @@
 ---
-# 08b-revert-flannel.yml
+# 20b-revert-flannel.yml
 # Reverts the k3s cluster CNI from Cilium back to the default Flannel (vxlan).
 # Removes Cilium and re-enables Flannel by restoring the k3s default config.
 #
@@ -68,4 +68,4 @@
           Flannel CNI is back! The cluster is now using the default k3s networking.
           Check nodes: kubectl get nodes
           Check system pods: kubectl get pods -n kube-system
-          To switch to Cilium: ansible-playbook -i inventory.yml playbooks/08a-install-cilium.yml
+          To switch to Cilium: ansible-playbook -i inventory.yml playbooks/20a-install-cilium.yml

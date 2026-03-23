@@ -38,13 +38,13 @@
   import_playbook: playbooks/07-registry.yml
   tags: [registry]
 
-# ── CNI Switching (run individually) ──
-- name: "Step 8a — Install Cilium CNI (replace Flannel)"
-  import_playbook: playbooks/08a-install-cilium.yml
+# ── CNI Switching — run LAST, disrupts full cluster networking ──
+- name: "Step 20a — Install Cilium CNI (replace Flannel)"
+  import_playbook: playbooks/20a-install-cilium.yml
   tags: [cni, cilium, never]
 
-- name: "Step 8b — Revert to Flannel CNI (remove Cilium)"
-  import_playbook: playbooks/08b-revert-flannel.yml
+- name: "Step 20b — Revert to Flannel CNI (remove Cilium)"
+  import_playbook: playbooks/20b-revert-flannel.yml
   tags: [cni, flannel, never]
 
 # ── HPA Demos (run individually, not part of the standard stack) ──
