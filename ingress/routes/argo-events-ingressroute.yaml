@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argo-events-webhook
+  namespace: argo-events
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`webhook.home.kenchlightyear.com`) && PathPrefix(`/push`)
+      kind: Rule
+      services:
+        - name: hpa-app-webhook-eventsource-svc # Convention: <eventsource-name>-eventsource-svc
+          port: 12000
+  tls:
+    secretName: argo-server-tls # Reusing the wildcard cert from argo namespace or homelab

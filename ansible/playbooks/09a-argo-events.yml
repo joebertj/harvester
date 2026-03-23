@@ -44,6 +44,21 @@
         kubectl apply -f {{ repo_root }}/argo/hpa-app-workflow-template.yaml
       changed_when: true
 
-    - name: "✅ Argo Events and CI templates installed"
+    - name: Apply Argo EventSource (Webhook Listener)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/argo/hpa-app-eventsource.yaml
+      changed_when: true
+
+    - name: Apply Argo Sensor (Workflow Trigger)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/argo/hpa-app-sensor.yaml
+      changed_when: true
+
+    - name: Apply Webhook IngressRoute
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/ingress/routes/argo-events-ingressroute.yaml
+      changed_when: true
+
+    - name: "✅ Argo Events and CI automation ready"
       ansible.builtin.debug:
         msg: "Argo Events components, Secure Registry Secret (via ESO), and WorkflowTemplate have been deployed."

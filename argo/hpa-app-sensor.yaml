@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: hpa-app-sensor
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: argo-server # Using argo-server SA which we should ensure has permissions
+  dependencies:
+    - name: hpa-app-dep
+      eventSourceName: hpa-app-webhook
+      eventName: hpa-app
+  triggers:
+    - template:
+        name: hpa-app-workflow-trigger
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: hpa-app-ci-
+                namespace: argo
+              spec:
+                workflowTemplateRef:
+                  name: hpa-app-ci-pipeline
+          parameters:
+            - src:
+                dependencyName: hpa-app-dep
+                dataKey: body.ref
+              dest: spec.arguments.parameters.0.value # branch (assuming ref -> branch mapping or just full ref)
