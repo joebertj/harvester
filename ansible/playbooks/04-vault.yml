@@ -162,6 +162,7 @@
         path "homelab/data/headlamp" { capabilities = ["read"] }
         path "homelab/data/k3os" { capabilities = ["read"] }
         path "homelab/data/ssh" { capabilities = ["read"] }
+        path "homelab/data/github-webhook" { capabilities = ["read"] }
         path "homelab/data/wireguard/*" { capabilities = ["read"] }
         EOF
       args:
