@@ -19,6 +19,13 @@ spec:
       containers:
         - name: homer
           image: ghcr.io/bastienwirtz/homer:latest
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "sed -i 's@</head>@<meta property=\"og:title\" content=\"Homelab | kenchlightyear.com\"><meta property=\"og:description\" content=\"Next-Gen Self-Hosting Infrastructure.\"><meta property=\"og:image\" content=\"https://home.kenchlightyear.com/assets/preview.png\"><meta name=\"twitter:card\" content=\"summary_large_image\"></head>@' /www/index.html"
           ports:
             - containerPort: 8080
           volumeMounts:
