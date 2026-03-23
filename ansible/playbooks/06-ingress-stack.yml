@@ -46,7 +46,7 @@
     - name: Create Homer assets ConfigMap
       ansible.builtin.shell: >
         kubectl create configmap homer-assets \
-        --from-file=custom.html="{{ ingress_dir }}/homer/custom.html" \
+        --from-file=index.html="{{ ingress_dir }}/homer/index.html" \
         --from-file=preview.png="{{ ingress_dir }}/homer/preview.png" \
         -n {{ homelab_namespace }} \
         --dry-run=client -o yaml | kubectl apply -f -

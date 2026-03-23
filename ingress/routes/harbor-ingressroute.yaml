@@ -1,0 +1,23 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: harbor-registry
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # API and Registry Core routes
+    - match: Host(`registry.home.kenchlightyear.com`) && (PathPrefix(`/api/`) || PathPrefix(`/service/`) || PathPrefix(`/v2/`) || PathPrefix(`/chartrepo/`) || PathPrefix(`/c/`))
+      kind: Rule
+      services:
+        - name: harbor-core
+          port: 80
+    # UI Portal route (Catch-all for this domain)
+    - match: Host(`registry.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: harbor-portal
+          port: 80
+  tls:
+    secretName: home-kenchlightyear-tls

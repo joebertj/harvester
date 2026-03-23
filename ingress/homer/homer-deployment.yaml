@@ -26,8 +26,8 @@ spec:
               mountPath: /www/assets/config.yml
               subPath: config.yml
             - name: assets
-              mountPath: /www/assets/custom.html
-              subPath: custom.html
+              mountPath: /www/index.html
+              subPath: index.html
             - name: assets
               mountPath: /www/assets/preview.png
               subPath: preview.png
