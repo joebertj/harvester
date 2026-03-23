@@ -56,6 +56,8 @@ spec:
         operator: "Equal"
         value: "intensive"
         effect: "NoSchedule"
+      imagePullSecrets:
+      - name: harbor-pullsecret
 
       # Force the pod to ONLY schedule on nodes labelled workload=intensive
       # Remove this block if you just want to ALLOW (not require) tainted nodes

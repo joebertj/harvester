@@ -41,6 +41,8 @@ spec:
         labelSelector:
           matchLabels:
             app: fastapi-metrics
+      imagePullSecrets:
+      - name: harbor-pullsecret
       containers:
       - name: fastapi
         image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
