@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hpa-app-workflow-sa
+  namespace: argo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hpa-app-deployer
+  namespace: harvester-autoscaling-sim
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hpa-app-deployer-binding
+  namespace: harvester-autoscaling-sim
+subjects:
+- kind: ServiceAccount
+  name: hpa-app-workflow-sa
+  namespace: argo
+roleRef:
+  kind: Role
+  name: hpa-app-deployer
+  apiGroup: rbac.authorization.k8s.io
