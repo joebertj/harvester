@@ -27,12 +27,12 @@ else
         # Ensure VAL is a number
         [[ $VAL =~ ^[0-9]+$ ]] || VAL=0
         
-        printf "  Pod: %-40s | Value: %s\n" "$POD" "$VAL"
+        printf "  Pod: %-40s | Users: %s\n" "$POD" "$VAL"
         TOTAL_SUM=$((TOTAL_SUM + VAL))
     done
 
     echo ""
-    echo "  >> TOTAL SUM: $TOTAL_SUM"
+    echo "  >> TOTAL USERS: $TOTAL_SUM"
     # Calculate estimated replicas based on sum (Ceiling division: (A + B - 1) / B)
     ESTIMATED_REPLICAS=$(( (TOTAL_SUM + 99999) / 100000 ))
     if [ "$ESTIMATED_REPLICAS" -lt 1 ]; then ESTIMATED_REPLICAS=1; fi
@@ -54,14 +54,29 @@ else
 fi
 echo ""
 
-# 3. Node Distribution
+# 3. Node Distribution (Total, Terminating, Pending)
 echo "--- POD DISTRIBUTION (Pods per Node) ---"
 PODS_LIST=$(kubectl get pods -n "$NAMESPACE" -o wide --no-headers)
 if [ -z "$PODS_LIST" ]; then
     echo "ℹ️ No pods found."
 else
-    echo "$PODS_LIST" | awk '{print $7}' | sort | uniq -c | \
-      awk '{printf "  Node: %-15s | Pods: %s\n", $2, $1}'
+    # Parse status and node columns to count by node
+    echo "$PODS_LIST" | awk '
+    {
+        node=$7;
+        status=$3;
+        if (node == "" || node == "<none>") next;
+        
+        total[node]++;
+        if (status == "Terminating") term[node]++;
+        else if (status == "Pending") pend[node]++;
+        else running[node]++;
+    }
+    END {
+        for (n in total) {
+            printf "  Node: %-15s | Total: %-2d | Terminating: %-2d | Pending: %-2d\n", n, total[n], term[n], pend[n];
+        }
+    }'
 fi
 echo ""
 
