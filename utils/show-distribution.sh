@@ -14,14 +14,17 @@ if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
     exit 1
 fi
 
-# 1. Current Load Metric (On Top)
-echo "--- CURRENT METRIC LOAD ---"
-METRIC_DATA=$(kubectl get hpa "$HPA_NAME" -n "$NAMESPACE" -o jsonpath='{.status.currentMetrics[0].pods.currentAverageValue}' 2>/dev/null || echo "N/A")
-if [ "$METRIC_DATA" == "N/A" ]; then
-    # Fallback for older HPA versions or annotations
-    METRIC_DATA=$(kubectl get hpa "$HPA_NAME" -n "$NAMESPACE" -o jsonpath='{.metadata.annotations.autoscaling\.alpha\.kubernetes\.io/current-metrics}' 2>/dev/null | jq -r '.[0].pods.currentAverageValue' 2>/dev/null || echo "Unknown")
+# 1. Real-time Metric Load (Direct from Pod)
+echo "--- REAL-TIME METRIC LOAD (Direct from Pod) ---"
+POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=fastapi-metrics --field-selector=status.phase=Running -o name | head -n 1 | cut -d/ -f2)
+
+if [ -n "$POD_NAME" ]; then
+    # Curl the metrics from inside the pod to avoid port-forwarding overhead
+    RAW_METRIC=$(kubectl exec -n "$NAMESPACE" "$POD_NAME" -- curl -s http://localhost:8000/metrics | grep "^simulated_user_load" | awk '{print $2}' || echo "N/A")
+    echo "  Pod: ${POD_NAME} | simulated_user_load: ${RAW_METRIC}"
+else
+    echo "  ⚠️ No running pods found to query metrics."
 fi
-echo "  Metric: simulated_user_load | Current Value: ${METRIC_DATA}"
 echo ""
 
 # 2. HPA Status Summary
