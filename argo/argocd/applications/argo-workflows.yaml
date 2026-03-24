@@ -1,5 +1,6 @@
 ---
 # argo-workflows-app.yaml — Argo CD Application for Argo Workflows Operator
+# Final stabilization fix: 2026-03-24T21:38:00
 # Installs the official Helm chart with server auth-mode configured
 
 apiVersion: argoproj.io/v1alpha1
