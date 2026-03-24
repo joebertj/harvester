@@ -58,7 +58,7 @@ spec:
     helm:
       values: |
         prometheus:
-          url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local
+          url: http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local
           port: 9090
         rules:
           default: false
