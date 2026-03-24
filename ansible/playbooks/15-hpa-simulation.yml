@@ -14,36 +14,36 @@
 - name: HPA Scaling Simulation (Common + Strategy)
   hosts: harvester
   gather_facts: false
-  environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
-
   vars:
-    strategy: "topology-spread" # Default strategy
-    namespace: "harvester-autoscaling-sim"
-    deployment: "fastapi-metrics-app"
-    setup_common: true          # Set to false to skip Namespace/Service/HPA base apply
+    # Use hpa_ prefix to avoid reserved variable warnings
+    hpa_strategy: "{{ strategy | default('topology-spread') }}"
+    hpa_namespace: "harvester-autoscaling-sim"
+    hpa_deployment: "fastapi-metrics-app"
+    hpa_setup_common: "{{ setup_common | default(true) | bool }}"
 
   tasks:
     - name: "🏗️  Apply Common Resources (Namespace, Service, HPA)"
       ansible.builtin.shell: >
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
         kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
-      when: setup_common
+      when: hpa_setup_common
       register: common_result
       changed_when: "'configured' in common_result.stdout or 'created' in common_result.stdout"
 
     - name: "Validate Strategy File"
       ansible.builtin.stat:
-        path: "{{ repo_root }}/scaling/hpa-{{ strategy }}.yaml"
+        path: "{{ repo_root }}/scaling/hpa-{{ hpa_strategy }}.yaml"
       register: strategy_file
 
     - name: "Fail if strategy file is missing"
       ansible.builtin.fail:
-        msg: "❌ Strategy file not found: scaling/hpa-{{ strategy }}.yaml"
+        msg: "❌ Strategy file not found: scaling/hpa-{{ hpa_strategy }}.yaml"
       when: not strategy_file.stat.exists
 
     - name: "Get CURRENT active image from cluster"
       ansible.builtin.shell: >
-        kubectl get deployment {{ deployment }} -n {{ namespace }}
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl get deployment {{ hpa_deployment }} -n {{ hpa_namespace }}
         -o jsonpath='{.spec.template.spec.containers[0].image}'
       register: current_image_raw
       failed_when: false
@@ -53,9 +53,10 @@
       ansible.builtin.set_fact:
         current_image: "{{ current_image_raw.stdout if current_image_raw.stdout != '' else 'registry.home.kenchlightyear.com/library/scaling-fastapi:latest' }}"
 
-    - name: "🚀 Applying Strategy: {{ strategy }}"
+    - name: "🚀 Applying Strategy: {{ hpa_strategy }}"
       ansible.builtin.shell: >
-        cat {{ repo_root }}/scaling/hpa-{{ strategy }}.yaml |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        cat {{ repo_root }}/scaling/hpa-{{ hpa_strategy }}.yaml |
         sed "s|image: .*|image: {{ current_image }}|g" |
         kubectl apply -f -
       register: apply_result
@@ -64,11 +65,13 @@
     - name: "📦 Final Status"
       ansible.builtin.debug:
         msg: |
-          Base setup:   {{ 'Success' if setup_common else 'Skipped' }}
-          Strategy:     {{ strategy }}
+          Base setup:   {{ 'Success' if hpa_setup_common else 'Skipped' }}
+          Strategy:     {{ hpa_strategy }}
           Active Image: {{ current_image }}
 
     - name: "⏳ Wait for Deployment Rollout"
       ansible.builtin.command: >
-        kubectl rollout status deployment/{{ deployment }} -n {{ namespace }} --timeout=60s
+        kubectl rollout status deployment/{{ hpa_deployment }} -n {{ hpa_namespace }} --timeout=60s
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path | expanduser }}"
       changed_when: false
