@@ -23,6 +23,37 @@
         helm repo update
       changed_when: false
 
+    - name: Check if Grafana admin password exists in Vault
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl exec -n {{ vault_namespace }} vault-0 -- \
+        vault kv get -field=admin-password homelab/monitoring/grafana
+      register: grafana_password_check
+      failed_when: false
+      changed_when: false
+
+    - name: Generate and store Grafana admin password if missing
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        NEW_PASS=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 20)
+        kubectl exec -n {{ vault_namespace }} vault-0 -- \
+        vault kv put homelab/monitoring/grafana admin-user="admin" admin-password="${NEW_PASS}"
+      when: grafana_password_check.rc != 0
+      changed_when: true
+      no_log: true
+
+    - name: Ensure ESO policy includes Grafana
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl exec -i -n {{ vault_namespace }} vault-0 -- \
+          vault policy write eso-policy - <<EOF
+        $(kubectl exec -n {{ vault_namespace }} vault-0 -- vault policy read eso-policy | grep path)
+        path "homelab/data/monitoring/grafana" { capabilities = ["read"] }
+        EOF
+      args:
+        executable: /bin/bash
+      changed_when: true
+
     - name: Remove conflicting admission webhook configurations (Cleanup)
       ansible.builtin.shell: |
         KUBECONFIG={{ kubeconfig_path | expanduser }}
@@ -36,9 +67,19 @@
         --version 34.1.1
         --namespace monitoring
         --set grafana.enabled=true
+        --set grafana.admin.existingSecret=grafana-admin-credentials
+        --set grafana.admin.userKey=admin-user
+        --set grafana.admin.passwordKey=admin-password
         --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
         --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false
         --wait
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path | expanduser }}"
+      changed_when: true
+
+    - name: Apply Grafana ExternalSecret
+      ansible.builtin.command: >
+        kubectl apply -f {{ ingress_dir }}/external-secrets/grafana-externalsecret.yaml
       environment:
         KUBECONFIG: "{{ kubeconfig_path | expanduser }}"
       changed_when: true
