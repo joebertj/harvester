@@ -50,34 +50,32 @@ spec:
         prometheus.io/port: "8000"
         prometheus.io/path: "/metrics"
     spec:
+      # Allow this pod to schedule on nodes tainted with workload=intensive:NoSchedule
       tolerations:
-      - key: "node-role.kubernetes.io/master"
-        operator: "Exists"
-        effect: "NoSchedule"
-      - key: "node-role.kubernetes.io/control-plane"
-        operator: "Exists"
+      - key: "workload"
+        operator: "Equal"
+        value: "intensive"
         effect: "NoSchedule"
       imagePullSecrets:
       - name: harbor-pullsecret
 
+      # Force the pod to ONLY schedule on nodes labelled workload=intensive
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: NotIn
+              - key: workload
+                operator: In
                 values:
-                - work-1
-        # Also spread to ensure we use the remaining nodes evenly
+                - intensive
+        # Also spread 1 pod per node among the tainted nodes
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app: fastapi-metrics
-              topologyKey: kubernetes.io/hostname
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: fastapi-metrics
+            topologyKey: kubernetes.io/hostname
 
       containers:
       - name: fastapi

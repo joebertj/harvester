@@ -14,7 +14,7 @@ STRATEGY=$1
 NAMESPACE="harvester-autoscaling-sim"
 DEPLOYMENT="fastapi-metrics-app"
 
-    echo "Usage: ./utils/switch-strategy.sh [topology-spread|node-affinity|pod-anti-affinity|taints-tolerations]"
+    echo "Usage: ./utils/switch-strategy.sh [topology-spread|node-affinity|pod-anti-affinity]"
 
 YAML_FILE="scaling/hpa-$STRATEGY.yaml"
 
