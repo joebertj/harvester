@@ -1,0 +1,63 @@
+---
+# 15-hpa-strategy.yml
+# Unified strategy switcher for the HPA scaling simulation.
+# Preserves the active image tag while swapping scheduling manifests.
+#
+# Usage:
+#   ansible-playbook -i inventory.yml playbooks/15-hpa-strategy.yml -e strategy=node-affinity
+#
+# Available Strategies:
+#   - topology-spread
+#   - node-affinity
+#   - pod-anti-affinity
+
+- name: Switch HPA Strategy
+  hosts: harvester
+  gather_facts: false
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+  vars:
+    strategy: "topology-spread" # Default strategy
+    namespace: "harvester-autoscaling-sim"
+    deployment: "fastapi-metrics-app"
+
+  tasks:
+    - name: "Validate Strategy File"
+      ansible.builtin.stat:
+        path: "{{ repo_root }}/scaling/hpa-{{ strategy }}.yaml"
+      register: strategy_file
+
+    - name: "Fail if strategy file is missing"
+      ansible.builtin.fail:
+        msg: "❌ Strategy file not found: scaling/hpa-{{ strategy }}.yaml"
+      when: not strategy_file.stat.exists
+
+    - name: "Get CURRENT active image from cluster"
+      ansible.builtin.shell: >
+        kubectl get deployment {{ deployment }} -n {{ namespace }}
+        -o jsonpath='{.spec.template.spec.containers[0].image}'
+      register: current_image_raw
+      failed_when: false
+      changed_when: false
+
+    - name: "Set image fact (fallback to :latest if deployment missing)"
+      ansible.builtin.set_fact:
+        current_image: "{{ current_image_raw.stdout if current_image_raw.stdout != '' else 'registry.home.kenchlightyear.com/library/scaling-fastapi:latest' }}"
+
+    - name: "🚀 Applying Strategy: {{ strategy }}"
+      ansible.builtin.shell: >
+        cat {{ repo_root }}/scaling/hpa-{{ strategy }}.yaml |
+        sed "s|image: .*|image: {{ current_image }}|g" |
+        kubectl apply -f -
+      register: apply_result
+      changed_when: "'configured' in apply_result.stdout or 'created' in apply_result.stdout"
+
+    - name: "📦 Current Image Preserved"
+      ansible.builtin.debug:
+        msg: "Applied strategy {{ strategy }} using image: {{ current_image }}"
+
+    - name: "⏳ Wait for Deployment Rollout"
+      ansible.builtin.command: >
+        kubectl rollout status deployment/{{ deployment }} -n {{ namespace }} --timeout=60s
+      changed_when: false
