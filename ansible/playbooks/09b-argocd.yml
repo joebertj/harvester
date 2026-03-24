@@ -95,22 +95,16 @@
       changed_when: true
       no_log: true
 
-    - name: Update ESO policy to include Argo CD
+    - name: Rollout all GitOps Applications
       ansible.builtin.shell: |
         KUBECONFIG={{ kubeconfig_path | expanduser }}
-        kubectl exec -i -n {{ vault_namespace }} vault-0 -- \
-          vault policy write eso-policy - <<EOF
-        $(kubectl exec -n {{ vault_namespace }} vault-0 -- vault policy read eso-policy | grep path)
-        path "homelab/data/argocd/admin" { capabilities = ["read"] }
-        EOF
-      args:
-        executable: /bin/bash
+        kubectl apply -f {{ repo_root }}/argo/argocd/applications/ --validate=false
       changed_when: true
 
-    - name: "✅ Argo CD secured in Vault"
+    - name: "✅ Argo CD Fully Bootstrapped"
       ansible.builtin.debug:
         msg: |
-          Argo CD is ready and secured!
+          Argo CD is ready and all applications have been registered!
           URL: https://argocd.{{ base_domain }}
-          User: admin
-          Password stored in Vault at: homelab/data/argocd/admin
+          Applications syncing: Monitoring, Ingress, Harbor, Headlamp, HPA, Argo Automation.
+          Credentials stored in Vault.
