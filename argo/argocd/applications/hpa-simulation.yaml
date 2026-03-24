@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/joebertj/harvester.git
     targetRevision: main
-    path: scaling/base
+    path: scaling/overlays/topology-spread
   destination:
     server: https://kubernetes.default.svc
     namespace: harvester-autoscaling-sim
