@@ -1,0 +1,27 @@
+---
+# headlamp-app.yaml — Argo CD Application for the Kubernetes UI
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: headlamp
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/headlamp/
+    chart: headlamp
+    targetRevision: 0.35.0
+    helm:
+      parameters:
+        - name: ingress.enabled
+          value: "false"
+        - name: replicaCount
+          value: "1"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homelab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
