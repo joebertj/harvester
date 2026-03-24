@@ -17,17 +17,16 @@
     KUBECONFIG: "{{ kubeconfig_path }}"
 
   tasks:
-    - name: Disable Flannel on the k3s control node via SSH
+    - name: Disable Flannel and Network Policy on k3OS (Control Node)
       ansible.builtin.shell: |
         ssh -i {{ ssh_key_path }} -o StrictHostKeyChecking=no \
           {{ control_node_user }}@{{ control_node_ip }} \
-          "sudo sed -i 's|--flannel-backend=vxlan||g' /etc/systemd/system/k3s.service || true && \
-           sudo bash -c 'cat >> /etc/rancher/k3s/config.yaml << EOF
+          "sudo mkdir -p /etc/rancher/k3s && \
+           sudo bash -c 'cat > /etc/rancher/k3s/config.yaml << EOF
         flannel-backend: none
         disable-network-policy: true
         EOF' && \
-           sudo systemctl daemon-reload && \
-           sudo systemctl restart k3s"
+           sudo rc-service k3s restart"
       args:
         executable: /bin/bash
       changed_when: true
