@@ -56,13 +56,13 @@
           persistence:
             enabled: true
             resourcePolicy: "keep"
-        dest: "{{ repo_root }}/ingress/harbor/do-harbor-values.yaml"
+        dest: "{{ repo_root }}/ingress/harbor/do/harbor-values.yaml"
         mode: "0644"
 
     - name: Install Harbor via Helm
       ansible.builtin.command: >
         helm upgrade --install harbor harbor/harbor
         --namespace {{ homelab_namespace }}
-        --values {{ repo_root }}/ingress/harbor/do-harbor-values.yaml
+        --values {{ repo_root }}/ingress/harbor/do/harbor-values.yaml
         --wait
       changed_when: true

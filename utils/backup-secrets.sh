@@ -24,4 +24,12 @@ else
     echo "⚠️ secrets.env not found!"
 fi
 
+echo "Backing up DigitalOcean Vault initialization keys..."
+if [ -f "$REPO_ROOT/ingress/vault/do/vault-init.json" ]; then
+    cp "$REPO_ROOT/ingress/vault/do/vault-init.json" "$DEST_DIR/do-vault-init.json"
+    echo "✅ do-vault-init.json safely copied to iCloud."
+else
+    echo "ℹ️ DigitalOcean vault-init.json not found."
+fi
+
 echo "Backup complete!"

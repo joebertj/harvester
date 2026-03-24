@@ -16,7 +16,7 @@
       changed_when: "'created' in ns_create.stdout"
 
     - name: Apply HPA Application (DigitalOcean)
-      ansible.builtin.command: kubectl apply -f {{ repo_root }}/scaling/do-hpa-common.yaml
+      ansible.builtin.command: kubectl apply -f {{ repo_root }}/scaling/do/hpa-common.yaml
       changed_when: true
 
     - name: Create Application Certificate (DigitalOcean)

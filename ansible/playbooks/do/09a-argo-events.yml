@@ -47,11 +47,11 @@
       changed_when: true
 
     - name: Apply DigitalOcean EventSource
-      ansible.builtin.command: kubectl apply -f {{ repo_root }}/argo/do-hpa-app-eventsource.yaml
+      ansible.builtin.command: kubectl apply -f {{ repo_root }}/argo/do/hpa-app-eventsource.yaml
       changed_when: true
 
     - name: Apply DigitalOcean Sensor
-      ansible.builtin.command: kubectl apply -f {{ repo_root }}/argo/do-hpa-app-sensor.yaml
+      ansible.builtin.command: kubectl apply -f {{ repo_root }}/argo/do/hpa-app-sensor.yaml
       changed_when: true
 
     - name: Create Webhook IngressRoute (DigitalOcean)

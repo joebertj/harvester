@@ -16,7 +16,7 @@
     vault_namespace: "vault"
     # DOKS usually doesn't need specialized storage values if using default PVCs
     # but we'll use a basic values file
-    vault_values_path: "{{ repo_root }}/ingress/vault/do-vault-values.yaml"
+    vault_values_path: "{{ repo_root }}/ingress/vault/do/vault-values.yaml"
 
   tasks:
     - name: Ensure CF_API_TOKEN is provided
@@ -77,7 +77,7 @@
       ansible.builtin.shell: |
         if ! kubectl exec -n {{ vault_namespace }} vault-0 -- vault status -format=json | grep -q '"initialized": true'; then
           kubectl exec -n {{ vault_namespace }} vault-0 -- \
-          vault operator init -key-shares=1 -key-threshold=1 -format=json > "{{ repo_root }}/ansible/do-vault-init.json"
+          vault operator init -key-shares=1 -key-threshold=1 -format=json > "{{ repo_root }}/ingress/vault/do/vault-init.json"
           echo "initialized"
         fi
       register: vault_init_res
@@ -85,7 +85,7 @@
 
     - name: Load init data
       ansible.builtin.set_fact:
-        init_data: "{{ lookup('file', repo_root + '/ansible/do-vault-init.json') | from_json }}"
+        init_data: "{{ lookup('file', repo_root + '/ingress/vault/do/vault-init.json') | from_json }}"
       when: vault_init_res.changed
 
     - name: Unseal and Login (First Time)

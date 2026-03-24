@@ -29,9 +29,8 @@ ansible/.retry
 secrets.env
 *.secrets
 vault-init.json
-vault/vault-init.json
+**/do/vault-init.json
 cert-manager/cloudflare-secret.yaml
-ansible/do-vault-init.json
 
 # --- Cloud-Init ---
 cloud-init/*-real.yaml
