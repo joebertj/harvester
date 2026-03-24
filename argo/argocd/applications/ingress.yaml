@@ -12,10 +12,9 @@ spec:
   source:
     repoURL: https://github.com/joebertj/harvester.git
     targetRevision: main
-    path: ingress
+    path: ingress/routes
     directory:
       recurse: true
-      exclude: "{harbor,vault,cert-manager,external-secrets,homer-configmap.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: homelab
