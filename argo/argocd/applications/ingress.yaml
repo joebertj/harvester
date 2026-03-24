@@ -13,8 +13,6 @@ spec:
     repoURL: https://github.com/joebertj/harvester.git
     targetRevision: main
     path: ingress/routes
-    directory:
-      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: homelab
