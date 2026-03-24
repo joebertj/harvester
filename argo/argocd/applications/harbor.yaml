@@ -1,5 +1,6 @@
 ---
 # harbor-app.yaml — Argo CD Application for the Harbor Registry
+# Uses in-line values to avoid external URL dependencies
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -11,10 +12,47 @@ spec:
   source:
     repoURL: https://helm.goharbor.io
     chart: harbor
-    targetRevision: 1.13.0 # Match or upgrade your current version
+    targetRevision: 1.13.0
     helm:
-      valueFiles:
-        - https://raw.githubusercontent.com/joebertj/harvester/main/ingress/harbor/harbor-values.yaml
+      values: |
+        expose:
+          type: ingress
+          tls:
+            enabled: true
+            secretName: "home-kenchlightyear-tls"
+          ingress:
+            hosts:
+              core: registry.home.kenchlightyear.com
+            className: traefik
+            annotations:
+              traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        externalURL: https://registry.home.kenchlightyear.com
+        existingSecretAdminPassword: "harbor-admin-password"
+        existingSecretAdminPasswordKey: "HARBOR_ADMIN_PASSWORD"
+        persistence:
+          enabled: true
+          persistentVolumeClaim:
+            registry:
+              size: 20Gi
+              storageClass: "local-path"
+            jobservice:
+              size: 1Gi
+              storageClass: "local-path"
+            database:
+              size: 5Gi
+              storageClass: "local-path"
+            redis:
+              size: 1Gi
+              storageClass: "local-path"
+            trivy:
+              size: 5Gi
+              storageClass: "local-path"
+        trivy:
+          enabled: true
+        notary:
+          enabled: false
+        chartmuseum:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: homelab
