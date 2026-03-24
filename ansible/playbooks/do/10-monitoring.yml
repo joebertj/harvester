@@ -38,7 +38,7 @@
       ansible.builtin.command: >
         helm upgrade --install prometheus-adapter prometheus-community/prometheus-adapter
         --namespace monitoring
-        --values {{ repo_root }}/monitoring/do-prometheus-adapter-values.yaml
+        --values {{ repo_root }}/monitoring/do/prometheus-adapter-values.yaml
         --wait
       changed_when: true
 
