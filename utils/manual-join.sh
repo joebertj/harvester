@@ -27,4 +27,4 @@ if [[ "$TOKEN" == "__K3OS_TOKEN__" ]]; then
 fi
 
 echo "==> Joining worker to $CONTROL_NODE ..."
-sudo k3s agent --token "${TOKEN}" --server "${CONTROL_NODE}"
+echo "sudo k3s agent --token "${TOKEN}" --server "${CONTROL_NODE}""
