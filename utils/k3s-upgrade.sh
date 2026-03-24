@@ -1,0 +1,1 @@
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=v1.21.5+k3s2 sh -

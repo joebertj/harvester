@@ -96,9 +96,16 @@ data:
             url: "https://headlamp.home.kenchlightyear.com"
             target: "_blank"
 
+          - name: "Argo CD"
+            logo: "https://raw.githubusercontent.com/walkero-gr/homer-icons/master/png/argocd.png"
+            subtitle: "GitOps Continuous Deployment"
+            tag: "cicd"
+            url: "https://argocd.home.kenchlightyear.com"
+            target: "_blank"
+
           - name: "Grafana"
             logo: "https://upload.wikimedia.org/wikipedia/commons/a/a1/Grafana_logo.svg"
-            subtitle: "Metrics & dashboards"
+            subtitle: "Metrics & Dashboards"
             tag: "observability"
             url: "https://grafana.home.kenchlightyear.com"
             target: "_blank"
