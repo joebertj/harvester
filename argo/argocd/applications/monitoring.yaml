@@ -61,20 +61,20 @@ spec:
     helm:
       values: |
         prometheus:
-          url: http://prometheus-stack-kube-prom-prometheus.monitoring.svc.cluster.local
+          url: http://prometheus-operated.monitoring.svc.cluster.local
           port: 9090
         rules:
           default: false
           custom:
-            - seriesQuery: '{__name__=~"^simulated_user_load$"}'
+            - seriesQuery: '{__name__=~"^simulated_user_load.*"}'
               resources:
                 overrides:
                   namespace: {resource: "namespace"}
                   pod: {resource: "pod"}
               name:
-                matches: "^(.*)$"
+                matches: "^(.*)"
                 as: "simulated_user_load"
-              metricsQuery: 'avg(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
+              metricsQuery: 'sum(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
