@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homer-config
+  namespace: homelab
+data:
+  config.yml: |
+    title: "Homelab DO Dashboard"
+    subtitle: "DigitalOcean Backup Cluster"
+    logo: "https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg"
+    columns: 3
+    services:
+      - name: "Infrastructure"
+        icon: "fas fa-cloud"
+        items:
+          - name: "Harbor"
+            logo: "https://goharbor.io/img/harbor-logo.svg"
+            subtitle: "Container Registry"
+            url: "https://registry.homelab.kenchlightyear.com"
+          - name: "Vault"
+            logo: "https://www.vaultproject.io/img/vault-logo-white.svg"
+            subtitle: "Secrets"
+            url: "https://vault.homelab.kenchlightyear.com"
+          - name: "Headlamp"
+            subtitle: "Cluster UI"
+            url: "https://headlamp.homelab.kenchlightyear.com"
+          - name: "Argo Workflows"
+            subtitle: "CI/CD"
+            url: "https://argo.homelab.kenchlightyear.com"

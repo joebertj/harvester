@@ -15,5 +15,7 @@ do-k3s.yaml
 .DS_Store
 
 # Ansible
+ansible/*.json
+ansible/*.env
 ansible/inventory-do.yml
 ansible/do-k3s.yaml

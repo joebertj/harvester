@@ -1,0 +1,55 @@
+---
+# do-06-ingress-stack.yml
+# Installs Traefik on DOKS and configures the DigitalOcean LoadBalancer.
+
+- name: Deploy Traefik (DigitalOcean)
+  hosts: digitalocean
+  gather_facts: false
+  environment:
+    KUBECONFIG: "/Users/joebertj/harvester/ansible/do-k3s.yaml"
+
+  tasks:
+    - name: Create traefik namespace
+      ansible.builtin.command: kubectl create namespace traefik
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Add Traefik Helm repo
+      ansible.builtin.command: helm repo add traefik https://helm.traefik.io/traefik
+      changed_when: false
+
+    - name: Install Traefik via Helm
+      ansible.builtin.command: >
+        helm upgrade --install traefik traefik/traefik
+        --namespace traefik
+        --set service.type=LoadBalancer
+        --set ports.web.http.redirections.entryPoint.to=websecure
+        --set ports.web.http.redirections.entryPoint.scheme=https
+        --skip-crds
+        --wait
+      changed_when: true
+
+    - name: Wait for LoadBalancer IP
+      ansible.builtin.shell: |
+        kubectl get svc traefik -n traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+      register: lb_ip
+      until: lb_ip.stdout | length > 0
+      retries: 20
+      delay: 10
+      changed_when: false
+
+    - name: Create homelab namespace
+      ansible.builtin.command: kubectl create namespace homelab
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Deploy Homer dashboard components (DigitalOcean)
+      ansible.builtin.command: >
+        kubectl apply -f {{ repo_root }}/ingress/homer/do/
+      changed_when: true
+
+    - name: Display LoadBalancer IP
+      ansible.builtin.debug:
+        msg: "DigitalOcean LoadBalancer IP is: {{ lb_ip.stdout }}. Please point *.homelab.kenchlightyear.com to this IP."
