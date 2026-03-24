@@ -1,0 +1,116 @@
+---
+# 09b-argocd.yml
+# Installs Argo CD and exposes it via Traefik
+
+- name: Deploy Argo CD
+  hosts: harvester
+  gather_facts: false
+  vars:
+    argocd_version: "4.10.9" # Compatible with K8s 1.21
+    argocd_namespace: "argocd"
+
+  tasks:
+    - name: Create argocd namespace
+      ansible.builtin.command: kubectl create namespace {{ argocd_namespace }}
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path | expanduser }}"
+      register: ns_create
+      failed_when: false
+      changed_when: "'created' in ns_create.stdout"
+
+    - name: Add Argo Helm repo
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        helm repo add argo https://argoproj.github.io/argo-helm
+        helm repo update
+      changed_when: false
+
+    - name: Install Argo CD via Helm
+      ansible.builtin.command: >
+        helm upgrade --install argocd argo/argo-cd
+        --version {{ argocd_version }}
+        --namespace {{ argocd_namespace }}
+        --values {{ repo_root }}/argo/argocd/values.yaml
+        --wait
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path | expanduser }}"
+      changed_when: true
+
+    - name: Create Argo CD Certificate
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl apply -f - <<EOF
+        apiVersion: cert-manager.io/v1
+        kind: Certificate
+        metadata:
+          name: argocd-tls
+          namespace: {{ argocd_namespace }}
+        spec:
+          secretName: argocd-tls
+          issuerRef:
+            name: letsencrypt-cloudflare
+            kind: ClusterIssuer
+          dnsNames:
+            - argocd.{{ base_domain }}
+        EOF
+      changed_when: true
+
+    - name: Create Argo CD IngressRoute
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl apply -f - <<EOF
+        apiVersion: traefik.containo.us/v1alpha1
+        kind: IngressRoute
+        metadata:
+          name: argocd-server
+          namespace: {{ argocd_namespace }}
+        spec:
+          entryPoints:
+            - websecure
+          routes:
+            - match: Host(\`argocd.{{ base_domain }}\`)
+              kind: Rule
+              services:
+                - name: argocd-server
+                  port: 80
+          tls:
+            secretName: argocd-tls
+        EOF
+      changed_when: true
+
+    - name: Get initial admin password
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl -n {{ argocd_namespace }} get secret argocd-initial-admin-secret \
+        -o jsonpath="{.data.password}" | base64 -d
+      register: initial_password
+      changed_when: false
+      no_log: true
+
+    - name: Store Argo CD admin password in Vault
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl exec -n {{ vault_namespace }} vault-0 -- \
+        vault kv put homelab/argocd/admin user="admin" password="{{ initial_password.stdout }}"
+      changed_when: true
+      no_log: true
+
+    - name: Update ESO policy to include Argo CD
+      ansible.builtin.shell: |
+        KUBECONFIG={{ kubeconfig_path | expanduser }}
+        kubectl exec -i -n {{ vault_namespace }} vault-0 -- \
+          vault policy write eso-policy - <<EOF
+        $(kubectl exec -n {{ vault_namespace }} vault-0 -- vault policy read eso-policy | grep path)
+        path "homelab/data/argocd/admin" { capabilities = ["read"] }
+        EOF
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: "✅ Argo CD secured in Vault"
+      ansible.builtin.debug:
+        msg: |
+          Argo CD is ready and secured!
+          URL: https://argocd.{{ base_domain }}
+          User: admin
+          Password stored in Vault at: homelab/data/argocd/admin
