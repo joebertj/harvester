@@ -95,3 +95,10 @@ data:
             tag: "observability"
             url: "https://headlamp.home.kenchlightyear.com"
             target: "_blank"
+
+          - name: "Grafana"
+            logo: "https://upload.wikimedia.org/wikipedia/commons/a/a1/Grafana_logo.svg"
+            subtitle: "Metrics & dashboards"
+            tag: "observability"
+            url: "https://grafana.home.kenchlightyear.com"
+            target: "_blank"
