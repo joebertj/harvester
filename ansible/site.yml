@@ -10,69 +10,26 @@
 # Skip steps using tags:
 #   ansible-playbook -i inventory.yml site.yml --skip-tags vault
 
-- name: "Step 1 — Setup local kubeconfig"
+- name: "Step 1 — Setup local prereqs"
   import_playbook: playbooks/01-prereqs.yml
   tags: [prereqs]
 
-- name: 2. Fetch kubeconfig
+- name: "Step 2 — Fetch kubeconfig"
   import_playbook: playbooks/02-kubeconfig.yml
   tags: [kubeconfig]
 
-- name: "Step 3 — Install cert-manager"
-  import_playbook: playbooks/03-cert-manager.yml
-  tags: [cert-manager]
-
-- name: "Step 4 — Deploy and initialize Vault"
-  import_playbook: playbooks/04-vault.yml
+- name: "Step 3 — Deploy and initialize Vault"
+  import_playbook: playbooks/03-vault.yml
   tags: [vault]
 
-- name: "Step 5 — Install External Secrets Operator"
-  import_playbook: playbooks/05-external-secrets.yml
+- name: "Step 4 — Install External Secrets Operator"
+  import_playbook: playbooks/04-external-secrets.yml
   tags: [eso, external-secrets]
 
-- name: "Step 6 — Deploy ingress stack"
-  import_playbook: playbooks/06-ingress-stack.yml
-  tags: [ingress]
+- name: "Step 5 — Bootstrap Secrets & Policy"
+  import_playbook: playbooks/05-secrets-bootstrap.yml
+  tags: [secrets, policy]
 
-- name: "Step 7 — Deploy local container registry"
-  import_playbook: playbooks/07-registry.yml
-  tags: [registry]
-
-- name: "Step 8 — Deploy Headlamp Kubernetes Dashboard"
-  import_playbook: playbooks/08-headlamp.yml
-  tags: [headlamp]
-
-# ── CNI Switching — run LAST, disrupts full cluster networking ──
-- name: "Step 20a — Install Cilium CNI (replace Flannel)"
-  import_playbook: playbooks/20a-install-cilium.yml
-  tags: [cni, cilium, never]
-
-- name: "Step 20b — Revert to Flannel CNI (remove Cilium)"
-  import_playbook: playbooks/20b-revert-flannel.yml
-  tags: [cni, flannel, never]
-
-# ── CI/CD — Argo ──
-- name: "Step 09 — Deploy Argo Workflows CI/CD Stack"
-  import_playbook: playbooks/09-argo-workflows.yml
-  tags: [argo, ci]
-
-- name: "Step 09a — Deploy Argo Events"
-  import_playbook: playbooks/09a-argo-events.yml
-  tags: [argo, events]
-
-# ── HPA Demos (run individually, not part of the standard stack) ──
-- name: "Step 15 — HPA Shared Common Resources (Namespace, Service, HPA)"
-  import_playbook: playbooks/15-hpa-common.yml
-  tags: [hpa, hpa-common, never]
-
-- name: "Step 15a — HPA Variant A: topologySpreadConstraints"
-  import_playbook: playbooks/15a-hpa-topology-spread.yml
-  tags: [hpa, hpa-a, never]
-
-- name: "Step 15b — HPA Variant B: podAntiAffinity"
-  import_playbook: playbooks/15b-hpa-pod-anti-affinity.yml
-  tags: [hpa, hpa-b, never]
-
-- name: "Step 15c — HPA Variant C: Taints and Tolerations"
-  import_playbook: playbooks/15c-hpa-taints-tolerations.yml
-  tags: [hpa, hpa-c, never]
+- name: "Step 6 — Deploy Argo CD & Rollout Apps"
+  import_playbook: playbooks/06-argocd-bootstrap.yml
+  tags: [argo, gitops]
