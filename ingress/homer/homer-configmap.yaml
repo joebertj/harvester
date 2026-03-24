@@ -95,10 +95,3 @@ data:
             tag: "observability"
             url: "https://headlamp.home.kenchlightyear.com"
             target: "_blank"
-
-          - name: "Hubble"
-            logo: "https://raw.githubusercontent.com/cilium/hubble/master/Documentation/images/hubble_logo.png"
-            subtitle: "Cilium network observability"
-            tag: "observability"
-            url: "https://hubble.home.kenchlightyear.com"
-            target: "_blank"

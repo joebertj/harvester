@@ -11,22 +11,24 @@
 #     Expect pods to restart. Do not run on a production workload.
 
 - name: Install Cilium CNI (replace Flannel)
-  hosts: harvester
+  hosts: digitalocean
   gather_facts: false
   environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
+    KUBECONFIG: "{{ repo_root }}/ansible/do-k3s.yaml"
 
   tasks:
-    - name: Disable Flannel and Network Policy on k3OS (Control Node)
+    - name: Disable Flannel and Network Policy on Ubuntu (Control Node)
       ansible.builtin.shell: |
         ssh -i {{ ssh_key_path }} -o StrictHostKeyChecking=no \
-          {{ control_node_user }}@{{ control_node_ip }} \
-          "sudo mkdir -p /etc/rancher/k3s && \
-           sudo bash -c 'cat > /etc/rancher/k3s/config.yaml << EOF
+          root@{{ control_node_ip }} \
+          "sudo sed -i 's\|--flannel-backend=vxlan\|\|g' /etc/systemd/system/k3s.service || true && \
+           sudo mkdir -p /etc/rancher/k3s && \
+           sudo bash -c 'cat >> /etc/rancher/k3s/config.yaml << EOF
         flannel-backend: none
         disable-network-policy: true
         EOF' && \
-           sudo rc-service k3s-server restart"
+           sudo systemctl daemon-reload && \
+           sudo systemctl restart k3s"
       args:
         executable: /bin/bash
       changed_when: true

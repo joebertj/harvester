@@ -27,3 +27,7 @@ data:
           - name: "Argo Workflows"
             subtitle: "CI/CD"
             url: "https://argo.homelab.kenchlightyear.com"
+          - name: "Hubble"
+            logo: "https://raw.githubusercontent.com/cilium/hubble/master/Documentation/images/hubble_logo.png"
+            subtitle: "Network Observability"
+            url: "https://hubble.homelab.kenchlightyear.com"
