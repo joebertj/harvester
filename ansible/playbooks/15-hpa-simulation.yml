@@ -4,7 +4,7 @@
 # Handles common resources (Namespace/Service) and strategy-specific deployments.
 #
 # Usage:
-#   ansible-playbook -i inventory.yml playbooks/15-hpa-simulation.yml -e strategy=node-affinity
+#   ansible-playbook -i inventory.yml playbooks/15-hpa-simulation.yml -e strat=node-affinity
 #
 # Available Strategies:
 #   - topology-spread
@@ -16,7 +16,8 @@
   gather_facts: false
   vars:
     # Use hpa_ prefix to avoid reserved variable warnings
-    hpa_strategy: "{{ strategy | default('topology-spread') }}"
+    # Pull from 'strat' variable to avoid reserved CLI name 'strategy'
+    hpa_strategy: "{{ strat | default('topology-spread') }}"
     hpa_namespace: "harvester-autoscaling-sim"
     hpa_deployment: "fastapi-metrics-app"
     hpa_setup_common: "{{ setup_common | default(true) | bool }}"
