@@ -15,6 +15,7 @@ spec:
     path: ingress
     directory:
       recurse: true
+      exclude: "{harbor/*,cert-manager/*,vault/*,external-secrets/*,homer-configmap.yaml}"
       exclude: "{external-secrets/*,vault/*}" # Bootstrapped by Ansible
   destination:
     server: https://kubernetes.default.svc
