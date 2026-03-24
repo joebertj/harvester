@@ -1,0 +1,24 @@
+---
+# harbor-app.yaml — Argo CD Application for the Harbor Registry
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: harbor
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://helm.goharbor.io
+    chart: harbor
+    targetRevision: 1.13.0 # Match or upgrade your current version
+    helm:
+      valueFiles:
+        - https://raw.githubusercontent.com/joebertj/harvester/main/ingress/harbor/harbor-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homelab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
