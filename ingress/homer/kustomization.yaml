@@ -11,6 +11,3 @@ configMapGenerator:
     files:
       - index.html
       - preview.png
-
-generatorOptions:
-  disableNameSuffixHash: true # Keeps the name "homer-assets" predictable
