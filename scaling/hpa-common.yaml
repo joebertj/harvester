@@ -50,4 +50,4 @@ spec:
         name: simulated_user_load
       target:
         type: AverageValue
-        averageValue: 5
+        averageValue: 100000

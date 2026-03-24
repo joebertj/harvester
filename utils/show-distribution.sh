@@ -14,19 +14,29 @@ if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
     exit 1
 fi
 
-# 1. Real-time Metric Load (Direct from Pod)
-echo "--- REAL-TIME METRIC LOAD (Direct from Pod) ---"
-POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=fastapi-metrics --field-selector=status.phase=Running -o name | head -n 1 | cut -d/ -f2)
+# 1. Real-time Metrics (Sum of all pods)
+echo "--- REAL-TIME METRICS PER POD ---"
+TOTAL_SUM=0
+RUNNING_PODS=$(kubectl get pods -n "$NAMESPACE" -l app=fastapi-metrics --field-selector=status.phase=Running --no-headers | awk '{print $1}')
 
-if [ -n "$POD_NAME" ]; then
-    # Pull the latest metric from the pod logs (requires the updated hpa-app image)
-    RAW_METRIC=$(kubectl logs -n "$NAMESPACE" "$POD_NAME" --tail=10 2>/dev/null | grep "simulated_user_load:" | tail -n 1 | awk '{print $2}' || echo "N/A")
-    echo "  Pod: ${POD_NAME} | simulated_user_load: ${RAW_METRIC}"
-    if [ "$RAW_METRIC" == "N/A" ]; then
-        echo "  (Note: If this is blank, the new image with logging may still be deploying via ArgoCD)."
-    fi
-else
+if [ -z "$RUNNING_PODS" ]; then
     echo "  ⚠️ No running pods found to query metrics."
+else
+    for POD in $RUNNING_PODS; do
+        VAL=$(kubectl logs -n "$NAMESPACE" "$POD" --tail=10 2>/dev/null | grep "simulated_user_load:" | tail -n 1 | awk '{print $2}' || echo 0)
+        # Ensure VAL is a number
+        [[ $VAL =~ ^[0-9]+$ ]] || VAL=0
+        
+        printf "  Pod: %-40s | Value: %s\n" "$POD" "$VAL"
+        TOTAL_SUM=$((TOTAL_SUM + VAL))
+    done
+
+    echo ""
+    echo "  >> TOTAL SUM: $TOTAL_SUM"
+    # Basic math check for expected replicas
+    EXPECTED=$((TOTAL_SUM / 100000))
+    if [ $EXPECTED -lt 1 ]; then EXPECTED=1; fi
+    echo "  >> ESTIMATED REPLICAS (Sum / 100,000): $EXPECTED"
 fi
 echo ""
 
