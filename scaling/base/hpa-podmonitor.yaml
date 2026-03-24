@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: fastapi-metrics-podmonitor
+  namespace: harvester-autoscaling-sim
+  labels:
+    release: prometheus-stack # Match the Prometheus operator selector
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-metrics
+  podMetricsEndpoints:
+  - port: http
+    path: /metrics
+    interval: 15s

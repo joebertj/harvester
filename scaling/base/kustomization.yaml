@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - hpa-common.yaml # Namespace, Service, HPA
   - hpa-deployment-base.yaml
+  - hpa-podmonitor.yaml
