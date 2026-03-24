@@ -22,4 +22,4 @@ patches:
                 - key: kubernetes.io/hostname
                   operator: In
                   values:
-                  - harvester-node-1
+                  - work-1
