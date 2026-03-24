@@ -23,9 +23,9 @@
           {{ control_node_user }}@{{ control_node_ip }} \
           "sudo sed -i 's|--flannel-backend=vxlan||g' /etc/systemd/system/k3s.service || true && \
            sudo bash -c 'cat >> /etc/rancher/k3s/config.yaml << EOF
-flannel-backend: none
-disable-network-policy: true
-EOF' && \
+        flannel-backend: none
+        disable-network-policy: true
+        EOF' && \
            sudo systemctl daemon-reload && \
            sudo systemctl restart k3s"
       args:
