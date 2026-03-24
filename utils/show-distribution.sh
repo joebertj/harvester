@@ -19,9 +19,12 @@ echo "--- REAL-TIME METRIC LOAD (Direct from Pod) ---"
 POD_NAME=$(kubectl get pods -n "$NAMESPACE" -l app=fastapi-metrics --field-selector=status.phase=Running -o name | head -n 1 | cut -d/ -f2)
 
 if [ -n "$POD_NAME" ]; then
-    # Curl the metrics from inside the pod to avoid port-forwarding overhead
-    RAW_METRIC=$(kubectl exec -n "$NAMESPACE" "$POD_NAME" -- curl -s http://localhost:8000/metrics | grep "^simulated_user_load" | awk '{print $2}' || echo "N/A")
+    # Pull the latest metric from the pod logs (requires the updated hpa-app image)
+    RAW_METRIC=$(kubectl logs -n "$NAMESPACE" "$POD_NAME" --tail=10 2>/dev/null | grep "simulated_user_load:" | tail -n 1 | awk '{print $2}' || echo "N/A")
     echo "  Pod: ${POD_NAME} | simulated_user_load: ${RAW_METRIC}"
+    if [ "$RAW_METRIC" == "N/A" ]; then
+        echo "  (Note: If this is blank, the new image with logging may still be deploying via ArgoCD)."
+    fi
 else
     echo "  ⚠️ No running pods found to query metrics."
 fi
