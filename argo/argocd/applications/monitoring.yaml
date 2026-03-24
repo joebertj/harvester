@@ -39,6 +39,7 @@ spec:
       - SkipSchemaValidation=true
       - Replace=true
       - ServerSideApply=true
+      - Force=true
 ---
 # prometheus-adapter-app.yaml — Argocd Application for the Prometheus Adapter
 # Used for HPA custom metrics
