@@ -5,7 +5,37 @@
 server:
   extraArgs:
     - --insecure # Traefik handles TLS termination
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
   ingress:
     enabled: false # We'll use a custom IngressRoute instead
   ingressGrpc:
     enabled: false # Traefik handles this via specific rules if needed
+
+repoServer:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+applicationController:
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Slow down the sync frequency to reduce API load
+configs:
+  cm:
+    timeout.reconciliation: 600s # 10 minutes instead of default 3 minutes
