@@ -26,7 +26,7 @@
         flannel-backend: none
         disable-network-policy: true
         EOF' && \
-           sudo rc-service k3s restart"
+           sudo rc-service k3s-server restart"
       args:
         executable: /bin/bash
       changed_when: true
