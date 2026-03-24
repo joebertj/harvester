@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      kind: Deployment
+      name: fastapi-metrics-app
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/topologySpreadConstraints
+        value: [] # Disable spread
+      - op: add
+        path: /spec/template/spec/tolerations
+        value:
+        - key: "tier"
+          operator: "Equal"
+          value: "high-perf"
+          effect: "NoSchedule"
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: tier
+                  operator: In
+                  values:
+                  - high-perf

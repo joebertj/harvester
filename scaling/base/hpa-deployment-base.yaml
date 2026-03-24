@@ -1,0 +1,48 @@
+---
+# hpa-deployment-base.yaml — Base Deployment for HPA Simulation
+# Default strategy: topologySpreadConstraints (Gradual spread)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-metrics-app
+  namespace: harvester-autoscaling-sim
+  labels:
+    app: fastapi-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-metrics
+  template:
+    metadata:
+      labels:
+        app: fastapi-metrics
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: fastapi-metrics
+      imagePullSecrets:
+      - name: harbor-pullsecret
+      containers:
+      - name: fastapi
+        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
