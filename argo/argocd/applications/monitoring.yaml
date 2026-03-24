@@ -62,13 +62,15 @@ spec:
         rules:
           default: false
           custom:
-            - seriesQuery: '{__name__=~"^fastapi_requests_total$"}'
+            - seriesQuery: '{__name__=~"^simulated_user_load$"}'
               resources:
-                template: <<.Resource>>
+                overrides:
+                  kubernetes_namespace: {resource: "namespace"}
+                  kubernetes_pod_name: {resource: "pod"}
               name:
-                matches: "^(.*)_total$"
-                as: "${1}_per_second"
-              metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[1m])'
+                matches: "^(.*)$"
+                as: "simulated_user_load"
+              metricsQuery: 'avg(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
