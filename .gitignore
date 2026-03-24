@@ -1,4 +1,4 @@
-# Terraform
+# --- Terraform ---
 .terraform/
 *.tfstate
 *.tfstate.backup
@@ -7,15 +7,35 @@
 tfplan
 .terraform.lock.hcl
 
-# Kubernetes
+# --- Kubernetes ---
 *kubeconfig*
 do-k3s.yaml
+ansible/do-k3s.yaml
 
-# OS files
+# --- OS & Editor ---
 .DS_Store
+*.swp
+*.swo
 
-# Ansible
+# --- Ansible ---
 ansible/*.json
 ansible/*.env
 ansible/inventory-do.yml
-ansible/do-k3s.yaml
+ansible/.retry
+**/__pycache__/
+*.pyc
+
+# --- Secrets (Never Commit) ---
+secrets.env
+*.secrets
+vault-init.json
+vault/vault-init.json
+cert-manager/cloudflare-secret.yaml
+ansible/do-vault-init.json
+
+# --- Cloud-Init ---
+cloud-init/*-real.yaml
+cloud-init/*-rendered.yaml
+
+# --- Helm ---
+.helm/

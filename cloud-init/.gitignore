@@ -1,6 +1,0 @@
-# Generated cloud-init files (contain secrets — never commit)
-*-real.yaml
-*-rendered.yaml
-
-# Editor
-.DS_Store
