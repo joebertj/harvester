@@ -1,17 +1,17 @@
 ---
-# 15-hpa-strategy.yml
-# Unified strategy switcher for the HPA scaling simulation.
-# Preserves the active image tag while swapping scheduling manifests.
+# 15-hpa-simulation.yml
+# Full lifecycle manager for the HPA scaling simulation.
+# Handles common resources (Namespace/Service) and strategy-specific deployments.
 #
 # Usage:
-#   ansible-playbook -i inventory.yml playbooks/15-hpa-strategy.yml -e strategy=node-affinity
+#   ansible-playbook -i inventory.yml playbooks/15-hpa-simulation.yml -e strategy=node-affinity
 #
 # Available Strategies:
 #   - topology-spread
 #   - node-affinity
 #   - pod-anti-affinity
 
-- name: Switch HPA Strategy
+- name: HPA Scaling Simulation (Common + Strategy)
   hosts: harvester
   gather_facts: false
   environment:
@@ -21,8 +21,16 @@
     strategy: "topology-spread" # Default strategy
     namespace: "harvester-autoscaling-sim"
     deployment: "fastapi-metrics-app"
+    setup_common: true          # Set to false to skip Namespace/Service/HPA base apply
 
   tasks:
+    - name: "🏗️  Apply Common Resources (Namespace, Service, HPA)"
+      ansible.builtin.shell: >
+        kubectl apply -f {{ repo_root }}/scaling/hpa-common.yaml
+      when: setup_common
+      register: common_result
+      changed_when: "'configured' in common_result.stdout or 'created' in common_result.stdout"
+
     - name: "Validate Strategy File"
       ansible.builtin.stat:
         path: "{{ repo_root }}/scaling/hpa-{{ strategy }}.yaml"
@@ -53,9 +61,12 @@
       register: apply_result
       changed_when: "'configured' in apply_result.stdout or 'created' in apply_result.stdout"
 
-    - name: "📦 Current Image Preserved"
+    - name: "📦 Final Status"
       ansible.builtin.debug:
-        msg: "Applied strategy {{ strategy }} using image: {{ current_image }}"
+        msg: |
+          Base setup:   {{ 'Success' if setup_common else 'Skipped' }}
+          Strategy:     {{ strategy }}
+          Active Image: {{ current_image }}
 
     - name: "⏳ Wait for Deployment Rollout"
       ansible.builtin.command: >
