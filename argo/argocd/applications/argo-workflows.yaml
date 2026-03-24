@@ -18,6 +18,10 @@ spec:
       parameters:
         - name: server.extraArgs
           value: ""
+        - name: controller.persistence.enabled
+          value: "true"
+        - name: server.persistence.enabled
+          value: "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: argo
