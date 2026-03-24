@@ -33,10 +33,12 @@ else
 
     echo ""
     echo "  >> TOTAL SUM: $TOTAL_SUM"
-    # Basic math check for expected replicas (Every 100,000 is 1 replica)
-    EXPECTED=$((TOTAL_SUM / 100000))
-    if [ $EXPECTED -lt 1 ]; then EXPECTED=1; fi
-    echo "  >> ESTIMATED REPLICAS (Sum / 100,000): $EXPECTED"
+    # Calculate estimated replicas based on sum (Ceiling division: (A + B - 1) / B)
+    ESTIMATED_REPLICAS=$(( (TOTAL_SUM + 99999) / 100000 ))
+    if [ "$ESTIMATED_REPLICAS" -lt 1 ]; then ESTIMATED_REPLICAS=1; fi
+    if [ "$ESTIMATED_REPLICAS" -gt 9 ]; then ESTIMATED_REPLICAS=9; fi
+
+    echo "  >> ESTIMATED REPLICAS (Sum / 100,000): $ESTIMATED_REPLICAS"
 fi
 echo ""
 
