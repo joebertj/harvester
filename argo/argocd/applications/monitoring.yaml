@@ -69,8 +69,8 @@ spec:
             - seriesQuery: '{__name__=~"^simulated_user_load$"}'
               resources:
                 overrides:
-                  kubernetes_namespace: {resource: "namespace"}
-                  kubernetes_pod_name: {resource: "pod"}
+                  namespace: {resource: "namespace"}
+                  pod: {resource: "pod"}
               name:
                 matches: "^(.*)$"
                 as: "simulated_user_load"
