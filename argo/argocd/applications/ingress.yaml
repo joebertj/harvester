@@ -1,0 +1,25 @@
+---
+# ingress-stack-app.yaml — Argo CD Application for the Ingress Layer
+# Manages Traefik config, services, routes, and Homer dashboard
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: HEAD
+    path: ingress
+    directory:
+      recurse: true
+      exclude: "{external-secrets/*,vault/*}" # Bootstrapped by Ansible
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: homelab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
