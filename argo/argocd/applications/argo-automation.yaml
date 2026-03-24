@@ -11,11 +11,11 @@ spec:
   project: default
   source:
     repoURL: https://github.com/joebertj/harvester.git
-    targetRevision: HEAD
+    targetRevision: main
     path: argo
     directory:
       recurse: true
-      exclude: "{argocd/**,do/**}"
+      exclude: "{argocd,do}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-events # Sensors and EventSources land here

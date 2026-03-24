@@ -11,11 +11,11 @@ spec:
   project: default
   source:
     repoURL: https://github.com/joebertj/harvester.git
-    targetRevision: HEAD
+    targetRevision: main
     path: ingress
     directory:
       recurse: true
-      exclude: "{harbor/**,cert-manager/**,vault/**,external-secrets/**,homer-configmap.yaml}"
+      exclude: "{harbor,vault,cert-manager,external-secrets,homer-configmap.yaml}"
   destination:
     server: https://kubernetes.default.svc
     namespace: homelab
