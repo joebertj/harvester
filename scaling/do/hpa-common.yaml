@@ -26,7 +26,7 @@ spec:
     kind: Deployment
     name: fastapi-metrics-app
   minReplicas: 1
-  maxReplicas: 30
+  maxReplicas: 9
   metrics:
   - type: Pods
     pods:
@@ -34,4 +34,4 @@ spec:
         name: simulated_user_load
       target:
         type: AverageValue
-        averageValue: 10
+        averageValue: 5
