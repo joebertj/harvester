@@ -1,0 +1,75 @@
+---
+# monitoring-app.yaml — Argocd Application for the Prometheus Stack
+# Deploys kube-prometheus-stack from the community Helm repo
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 34.1.1
+    helm:
+      # We inline the crucial existingSecret values
+      # For a more advanced setup, we can use multiple sources to pull values from this repo
+      values: |
+        grafana:
+          enabled: true
+          admin:
+            existingSecret: grafana-admin-credentials
+            userKey: admin-user
+            passwordKey: admin-password
+        prometheus:
+          prometheusSpec:
+            podMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelectorNilUsesHelmValues: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+# prometheus-adapter-app.yaml — Argocd Application for the Prometheus Adapter
+# Used for HPA custom metrics
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-adapter
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: prometheus-adapter
+    targetRevision: 3.3.0
+    helm:
+      values: |
+        prometheus:
+          url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local
+          port: 9090
+        rules:
+          default: false
+          custom:
+            - seriesQuery: '{__name__=~"^fastapi_requests_total$"}'
+              resources:
+                template: <<.Resource>>
+              name:
+                matches: "^(.*)_total$"
+                as: "${1}_per_second"
+              metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[1m])'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

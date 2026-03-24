@@ -1,0 +1,11 @@
+---
+# Argo CD values for homelab
+# → https://argocd.home.kenchlightyear.com
+
+server:
+  extraArgs:
+    - --insecure # Traefik handles TLS termination
+  ingress:
+    enabled: false # We'll use a custom IngressRoute instead
+  ingressGrpc:
+    enabled: false # Traefik handles this via specific rules if needed
