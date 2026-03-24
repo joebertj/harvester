@@ -1,0 +1,25 @@
+---
+# argo-automation-app.yaml — Argo CD Application for Custom CI/CD Automation
+# Manages RBAC, EventSources, Sensors, and WorkflowTemplates
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-automation
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: HEAD
+    path: argo
+    directory:
+      recurse: true
+      exclude: "{argocd/*,do/*}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-events # Sensors and EventSources land here
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
