@@ -45,7 +45,8 @@ spec:
       - name: harbor-pullsecret
       containers:
       - name: fastapi
-        image: registry.home.kenchlightyear.com/library/scaling-fastapi:20260323-134924
+        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
           name: http
