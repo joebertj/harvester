@@ -13,12 +13,6 @@ spec:
     repoURL: https://argoproj.github.io/argo-helm
     chart: argo-workflows
     targetRevision: 0.41.0 # Stable version
-    helm:
-      parameters:
-        - name: server.extraArgs
-          value: "{--auth-mode=server,--secure=false}"
-        - name: server.readinessProbe.httpGet.scheme
-          value: "HTTP"
   destination:
     server: https://kubernetes.default.svc
     namespace: argo
