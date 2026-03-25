@@ -97,7 +97,7 @@ data:
             target: "_blank"
 
           - name: "Argo CD"
-            logo: "https://raw.githubusercontent.com/walkero-gr/homer-icons/master/png/argocd.png"
+            logo: "https://raw.githubusercontent.com/argoproj/argo-cd/master/assets/logo.png"
             subtitle: "GitOps Continuous Deployment"
             tag: "cicd"
             url: "https://argocd.home.kenchlightyear.com"

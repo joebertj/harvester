@@ -17,5 +17,5 @@ spec:
   data:
     - secretKey: token
       remoteRef:
-        key: argocd/workflow token
+        key: argocd/workflow
         property: token

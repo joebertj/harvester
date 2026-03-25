@@ -15,7 +15,7 @@ spec:
     path: argo
     directory:
       recurse: true
-      exclude: "{argocd,do}"
+      exclude: "{argocd,do,extras}"
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-events # Sensors and EventSources land here
