@@ -20,11 +20,12 @@ spec:
           extraArgs:
             - --auth-mode=server
             - --auth-mode=client
-          persistence:
-            enabled: true
+          # Persistence causes crashes when not properly configured with a database
+          # persistence:
+          #   enabled: true
         controller:
-          persistence:
-            enabled: true
+          # persistence:
+          #   enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argo
