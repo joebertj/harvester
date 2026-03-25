@@ -3,8 +3,8 @@ kind: Kustomization
 
 resources:
   - homer-configmap.yaml
-  - deployment.yaml
-  - service.yaml
+  - homer-deployment.yaml
+  - homer-service.yaml
 
 configMapGenerator:
   - name: homer-assets
