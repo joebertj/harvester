@@ -17,8 +17,9 @@ spec:
     helm:
       values: |
         controller:
-          config:
-            containerRuntimeExecutor: emissary
+          env:
+            - name: ARGO_CONTAINER_RUNTIME_EXECUTOR
+              value: emissary
         server:
           extraArgs:
             - --auth-mode=server
