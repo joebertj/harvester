@@ -39,10 +39,13 @@ data:
           mongodb-org=4.4.29 mongodb-org-server=4.4.29 mongodb-org-shell=4.4.29 mongodb-org-mongos=4.4.29 mongodb-org-tools=4.4.29 \
       && rm -rf /var/lib/apt/lists/*
 
-    # Download Omada .deb during build (repo typically gitignores the large .deb)
+    # Download and Install Omada .deb during build
     ARG OMADA_DEB_URL="https://static.tp-link.com/upload/software/2025/202508/20250802/omada_v5.15.24.19_linux_x64_20250724152622.deb"
     RUN mkdir -p /opt/omada \
-      && curl -fsSL "$OMADA_DEB_URL" -o /opt/omada/omada.deb
+      && curl -fsSL "$OMADA_DEB_URL" -o /opt/omada/omada.deb \
+      && dpkg -i /opt/omada/omada.deb || (apt-get update && apt-get -y -f install) \
+      && rm -rf /opt/omada/omada.deb \
+      && rm -rf /var/lib/apt/lists/*
 
     COPY docker-entrypoint.sh /usr/local/bin/entrypoint.sh
     RUN chmod +x /usr/local/bin/entrypoint.sh
