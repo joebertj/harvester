@@ -1,0 +1,30 @@
+---
+# hpa-simulation-app.yaml — Argo CD Application for the HPA Scale Demo
+# Strategy can be switched by changing the 'path' below
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hpa-simulation
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: main
+    path: scaling/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: harvester-autoscaling-sim
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true # Production Standard: Safe now that replicas are omitted from Git
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: fastapi-metrics-app
+      jsonPointers:
+        - /spec/replicas
