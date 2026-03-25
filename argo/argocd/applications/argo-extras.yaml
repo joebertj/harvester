@@ -1,0 +1,24 @@
+---
+# argo-extras-app.yaml — Argo CD Application for Non-Helm Manifests in Namespace 'argo'
+# Manages RBAC, Secrets, and ExternalSecrets specifically for Workflows
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-extras
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: main
+    path: argo/extras
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
