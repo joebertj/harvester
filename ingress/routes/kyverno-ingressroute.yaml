@@ -1,0 +1,20 @@
+---
+# IngressRoute for Kyverno Policy Reporter UI
+# → https://kyverno.home.kenchlightyear.com → policy-reporter-ui in kyverno ns
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kyverno-reporter
+  namespace: kyverno
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`kyverno.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: policy-reporter-ui
+          port: 8080
+  tls:
+    secretName: home-kenchlightyear-tls

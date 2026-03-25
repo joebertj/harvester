@@ -116,3 +116,10 @@ data:
             tag: "infrastructure"
             url: "https://omada.home.kenchlightyear.com"
             target: "_blank"
+
+          - name: "Kyverno"
+            icon: "fas fa-shield-alt"
+            subtitle: "Policy engine & compliance reports"
+            tag: "security"
+            url: "https://kyverno.home.kenchlightyear.com"
+            target: "_blank"

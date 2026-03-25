@@ -1,0 +1,31 @@
+---
+# disallow-privileged.yaml — Audit privileged containers
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged
+  annotations:
+    policies.kyverno.io/title: Disallow Privileged Containers
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      Privileged containers have full access to the host.
+      Flag any pods running in privileged mode.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: check-privileged
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Container '{{request.object.spec.containers[].name}}' must not run in privileged mode."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: "!true | !*"

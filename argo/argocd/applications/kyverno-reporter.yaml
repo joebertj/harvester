@@ -1,0 +1,33 @@
+---
+# kyverno-reporter.yaml — Argo CD Application for Policy Reporter UI
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-reporter
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://kyverno.github.io/policy-reporter/
+    chart: policy-reporter
+    targetRevision: 2.24.2
+    helm:
+      values: |
+        ui:
+          enabled: true
+        kyvernoPlugin:
+          enabled: true
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

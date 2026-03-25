@@ -1,0 +1,31 @@
+---
+# require-labels.yaml — Audit Deployments/StatefulSets missing 'app' label
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-labels
+  annotations:
+    policies.kyverno.io/title: Require App Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/description: >-
+      Deployments and StatefulSets must include an 'app' label
+      for consistent service discovery and monitoring.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: check-app-label
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+      validate:
+        message: "The label 'app' is required on {{request.object.kind}}/{{request.object.metadata.name}}."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"

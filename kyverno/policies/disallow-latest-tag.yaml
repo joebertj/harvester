@@ -1,0 +1,30 @@
+---
+# disallow-latest-tag.yaml — Audit containers using :latest tag
+
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Using the :latest tag is bad practice. Images should use
+      a specific version tag for reproducibility.
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: check-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Container '{{request.object.spec.containers[].name}}' uses the :latest tag or has no tag specified."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest & *:*"

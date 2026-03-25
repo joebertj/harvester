@@ -28,3 +28,4 @@ spec:
       name: fastapi-metrics-app
       jsonPointers:
         - /spec/replicas
+        - /spec/template/spec/containers/0/image

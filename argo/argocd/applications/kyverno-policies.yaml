@@ -1,0 +1,24 @@
+---
+# kyverno-policies.yaml — Argo CD Application for custom Kyverno policies
+# Watches the kyverno/policies/ directory for ClusterPolicy manifests
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: main
+    path: kyverno/policies
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
