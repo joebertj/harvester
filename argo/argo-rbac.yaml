@@ -69,10 +69,15 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: argo-workflows-controller-patch
-rules:
 - apiGroups: ["argoproj.io"]
-  resources: ["workflows/status", "workflowtaskresults", "workflowtaskresults/status"]
+  resources:
+    - workflows/status
+    - workflowtaskresults
+    - workflowtaskresults/status
+    - workflowtasksets
+    - workflowtasksets/status
+    - workflowartifactgctasks
+    - workflowartifactgctasks/status
   verbs: ["get", "create", "update", "patch", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
