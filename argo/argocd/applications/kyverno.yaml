@@ -1,5 +1,6 @@
 ---
 # kyverno.yaml — Argo CD Application for Kyverno Policy Engine
+# Using chart v2.7.5 (app v1.9.5) for k8s 1.21 compatibility
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -11,27 +12,26 @@ spec:
   source:
     repoURL: https://kyverno.github.io/kyverno/
     chart: kyverno
-    targetRevision: 3.7.1
+    targetRevision: 2.7.5
     helm:
       values: |
         replicaCount: 1
-        admissionController:
-          replicas: 1
-        backgroundController:
-          replicas: 1
-        cleanupController:
-          replicas: 1
-        reportsController:
-          replicas: 1
+        resources:
+          limits:
+            memory: 384Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
         config:
-          webhooks:
-            - namespaceSelector:
-                matchExpressions:
-                  - key: kubernetes.io/metadata.name
-                    operator: NotIn
-                    values:
-                      - kube-system
-                      - kyverno
+          excludeGroupRole:
+            - system:serviceaccounts:kube-system
+            - system:nodes
+          resourceFilters:
+            - "[Event,*,*]"
+            - "[*,kube-system,*]"
+            - "[*,kube-public,*]"
+            - "[*,kube-node-lease,*]"
+            - "[*,kyverno,*]"
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
@@ -41,4 +41,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
