@@ -27,3 +27,27 @@ roleRef:
   kind: Role
   name: hpa-app-deployer
   apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hpa-app-workflow-executor
+  namespace: argo
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hpa-app-workflow-executor-binding
+  namespace: argo
+subjects:
+- kind: ServiceAccount
+  name: hpa-app-workflow-sa
+  namespace: argo
+roleRef:
+  kind: Role
+  name: hpa-app-workflow-executor
+  apiGroup: rbac.authorization.k8s.io
