@@ -17,10 +17,7 @@ spec:
     helm:
       values: |
         controller:
-          workflowDefaults:
-            containerRuntimeExecutor: emissary
-          config:
-            containerRuntimeExecutor: emissary
+          containerRuntimeExecutor: emissary
         server:
           extraArgs:
             - --auth-mode=server
