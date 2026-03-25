@@ -12,8 +12,15 @@ echo "========================================================="
 echo "  STARTING HPA SCALING SIMULATION (GITOPS)"
 echo "========================================================="
 
-# Recreate the application manifest
-cat <<EOF > "$APP_MANIFEST"
+DISABLED_MANIFEST="$(dirname "$APP_MANIFEST")/disabled/hpa-simulation.yaml.disabled"
+
+if [ -f "$DISABLED_MANIFEST" ]; then
+    echo "⏳ Restoring manifest from 'disabled' folder..."
+    git mv "$DISABLED_MANIFEST" "$APP_MANIFEST"
+else
+    echo "⏳ Creating HPA Simulation manifest from inline template..."
+    # Recreate the application manifest
+    cat <<EOF > "$APP_MANIFEST"
 ---
 # hpa-simulation-app.yaml — Argo CD Application for the HPA Scale Demo
 # Strategy can be switched by changing the 'path' below
