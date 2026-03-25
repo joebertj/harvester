@@ -4,6 +4,7 @@ metadata:
   name: hpa-app-ci-pipeline
   namespace: argo
 spec:
+  containerRuntimeExecutor: emissary
   serviceAccountName: hpa-app-workflow-sa
   entrypoint: main
   arguments:
