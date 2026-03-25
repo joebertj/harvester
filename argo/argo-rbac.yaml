@@ -48,6 +48,16 @@ metadata:
   name: hpa-app-workflow-executor
   namespace: argo
 rules:
+- apiGroups: ["argoproj.io"]
+  resources:
+    - workflows/status
+    - workflowtaskresults
+    - workflowtaskresults/status
+    - workflowtasksets
+    - workflowtasksets/status
+    - workflowartifactgctasks
+    - workflowartifactgctasks/status
+  verbs: ["get", "create", "update", "patch", "list", "watch", "delete"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "patch"]
