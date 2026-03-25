@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: omada
-          image: registry.home.kenchlightyear.com/library/omada-controller:latest
+          image: registry.home.kenchlightyear.com/library/omada:5.15.24.19
           imagePullPolicy: IfNotPresent
           ports:
             - name: https-ui

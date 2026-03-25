@@ -12,7 +12,7 @@ spec:
       - name: branch
         value: main
       - name: image_name
-        value: registry.home.kenchlightyear.com/library/omada-controller
+        value: registry.home.kenchlightyear.com/library/omada
   templates:
     - name: main
       steps:
