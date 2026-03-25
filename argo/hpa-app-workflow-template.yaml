@@ -10,7 +10,7 @@ spec:
   arguments:
     parameters:
       - name: repo_url
-        value: "https://github.com/joebertj/hpa-app.git"
+        value: "git://github.com/joebertj/hpa-app.git"
       - name: branch
         value: "main"
       - name: image_name
