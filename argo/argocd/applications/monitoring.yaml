@@ -23,6 +23,12 @@ spec:
             existingSecret: grafana-admin-credentials
             userKey: admin-user
             passwordKey: admin-password
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              searchNamespace: monitoring
         prometheus:
           prometheusSpec:
             podMonitorSelectorNilUsesHelmValues: false

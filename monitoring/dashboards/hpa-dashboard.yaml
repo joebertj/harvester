@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: harvester-hpa-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  harvester-hpa.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 100000 }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "textMode": "auto"
+          },
+          "title": "Total Simulated User Load",
+          "type": "stat",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(simulated_user_load{namespace=\"harvester-autoscaling-sim\"})",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Users",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": { "type": "linear" },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": { "group": "A", "mode": "none" },
+                "thresholdsStyle": { "mode": "off" }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 80 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "id": 2,
+          "options": {
+            "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "title": "User Load per Pod",
+          "type": "timeseries",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(simulated_user_load{namespace=\"harvester-autoscaling-sim\"}) by (pod)",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "axisLabel": "Replicas",
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineInterpolation": "stepAfter",
+                "lineWidth": 2
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "id": 3,
+          "options": {
+            "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+            "tooltip": { "mode": "single", "sort": "none" }
+          },
+          "title": "Scaling Replicas",
+          "type": "timeseries",
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "kube_deployment_status_replicas{deployment=\"fastapi-metrics-app\", namespace=\"harvester-autoscaling-sim\"}",
+              "legendFormat": "Actual Replicas",
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "vector(1) + (sum(simulated_user_load{namespace=\"harvester-autoscaling-sim\"}) / 100000)",
+              "legendFormat": "Ideal Replicas",
+              "refId": "B"
+            }
+          ]
+        }
+      ],
+      "schemaVersion": 36,
+      "style": "dark",
+      "tags": ["harvester", "hpa"],
+      "templating": { "list": [] },
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Harvester HPA Simulation",
+      "uid": "harvester-hpa-sim",
+      "version": 1,
+      "weekStart": ""
+    }
