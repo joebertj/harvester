@@ -78,12 +78,37 @@ A robust HTTP daemon that automatically serves the `cloud-init/` directory on po
 
 ---
 
-## `backup-secrets.sh` — Sync vaulted secrets to iCloud
+## `switch-strategy.sh` — Switch HPA Simulation Strategy (GitOps)
 
-Securely copies crucial files (`vault-init.json` and `secrets.env`) from the system directly into your iCloud Drive for permanent encrypted preservation. 
+Programmatically switches the HPA deployment strategy by updating the `argo/argocd/applications/hpa-simulation.yaml` manifest in Git and pushing the change. This triggers an Argo CD synchronization.
+
+```bash
+# Switch to node-affinity strategy
+./utils/switch-strategy.sh node-affinity
+
+# Switch back to the base strategy
+./utils/switch-strategy.sh base
+```
+
+**Valid strategies:** `base`, `topology-spread`, `node-affinity`, `pod-anti-affinity`, `taints-tolerations`.
+
+---
+
+## `backup-secrets.sh` & `restore-secrets.sh` — Sync secrets to/from iCloud
+
+Securely copies crucial files (`vault-init.json`, `do-vault-init.json`, and `secrets.env`) between the repository and your iCloud Drive for permanent encrypted preservation.
+
+```bash
+# Backup to iCloud
+./utils/backup-secrets.sh
+
+# Restore from iCloud to Repo
+./utils/restore-secrets.sh
+```
 
 ---
 
 ## `reload-homer.sh` — Instant Homer Dashboard refresh
 
-Instantly tests and applies the `ingress/homer/homer-configmap.yaml` and forcibly causes a zero-downtime rolling restart of the dashboard pod. Execute whenever adding a new feature or button to your homelab dashboard!
+> [!NOTE]
+> This script is currently being refactored to use Argo CD synchronization. Use `argocd app sync argo-automation` for now.
