@@ -121,6 +121,18 @@ View violations: `kubectl get policyreport -A` or browse the Policy Reporter UI 
 
 To switch a policy to enforcing mode, change `validationFailureAction: Audit` to `Enforce` in the policy YAML.
 
+### Known Issue — CRD Installation
+
+Kyverno's core CRDs (`clusterpolicies.kyverno.io`, `policies.kyverno.io`) exceed 1MB and ArgoCD may silently fail to install them. If the Kyverno pod crashes with `"CRDs not installed"`, apply them manually:
+
+```bash
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm template kyverno kyverno/kyverno --version 2.7.5 --include-crds | kubectl apply --server-side -f -
+kubectl rollout restart deployment kyverno -n kyverno
+```
+
+This only needs to be done **once** — after the CRDs exist, ArgoCD manages everything normally.
+
 ---
 
 ## Related Repositories

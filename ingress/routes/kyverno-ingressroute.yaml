@@ -14,7 +14,7 @@ spec:
     - match: Host(`kyverno.home.kenchlightyear.com`)
       kind: Rule
       services:
-        - name: policy-reporter-ui
+        - name: kyverno-reporter-ui
           port: 8080
   tls:
     secretName: home-kenchlightyear-tls
