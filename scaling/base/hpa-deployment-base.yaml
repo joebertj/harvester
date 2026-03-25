@@ -10,7 +10,6 @@ metadata:
   labels:
     app: fastapi-metrics
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: fastapi-metrics

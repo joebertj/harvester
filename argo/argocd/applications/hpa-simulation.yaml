@@ -22,3 +22,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: fastapi-metrics-app
+      jsonPointers:
+        - /spec/replicas
