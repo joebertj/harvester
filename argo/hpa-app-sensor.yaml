@@ -23,6 +23,7 @@ spec:
                 generateName: hpa-app-ci-
                 namespace: argo
               spec:
+                containerRuntimeExecutor: emissary
                 workflowTemplateRef:
                   name: hpa-app-ci-pipeline
                 arguments:
