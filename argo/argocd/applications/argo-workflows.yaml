@@ -17,7 +17,7 @@ spec:
     helm:
       values: |
         controller:
-          env:
+          extraEnv:
             - name: ARGO_CONTAINER_RUNTIME_EXECUTOR
               value: emissary
         server:
