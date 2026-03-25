@@ -16,16 +16,10 @@ spec:
     helm:
       values: |
         expose:
-          type: ingress
+          type: clusterIP
           tls:
             enabled: true
             secretName: "home-kenchlightyear-tls"
-          ingress:
-            hosts:
-              core: registry.home.kenchlightyear.com
-            className: traefik
-            annotations:
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
         externalURL: https://registry.home.kenchlightyear.com
         existingSecretAdminPassword: "harbor-admin-password"
         existingSecretAdminPasswordKey: "HARBOR_ADMIN_PASSWORD"
