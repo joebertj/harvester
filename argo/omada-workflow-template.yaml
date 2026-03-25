@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: omada-ci-pipeline
+  namespace: argo
+spec:
+  containerRuntimeExecutor: emissary
+  serviceAccountName: hpa-app-workflow-sa
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: branch
+        value: main
+      - name: image_name
+        value: registry.home.kenchlightyear.com/library/omada-controller
+  templates:
+    - name: main
+      steps:
+        - - name: build-and-push
+            template: kaniko-build
+        - - name: deploy-update
+            template: deploy-update
+
+    - name: kaniko-build
+      container:
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+          - "--context=git://github.com/joebertj/omada.git#{{workflow.parameters.branch}}"
+          - "--dockerfile=/docker/Dockerfile"
+          - "--destination={{workflow.parameters.image_name}}:{{workflow.name}}"
+          - "--destination={{workflow.parameters.image_name}}:latest"
+          - "--skip-tls-verify" # Internal registry might have self-signed/trust issues
+        volumeMounts:
+          - name: registry-config
+            mountPath: /kaniko/.docker/
+          - name: kaniko-dockerfile
+            mountPath: /docker
+      volumes:
+        - name: registry-config
+          secret:
+            secretName: harbor-registry-config
+            items:
+              - key: .dockerconfigjson
+                path: config.json
+        - name: kaniko-dockerfile
+          configMap:
+            name: omada-kaniko-dockerfile
+            items:
+              - key: Dockerfile
+                path: Dockerfile
+
+    - name: deploy-update
+      resource:
+        action: patch
+        mergeStrategy: strategic
+        manifest: |
+          apiVersion: apps/v1
+          kind: StatefulSet
+          metadata:
+            name: omada
+            namespace: homelab
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: omada
+                    image: {{workflow.parameters.image_name}}:{{workflow.name}}
+

@@ -29,6 +29,30 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: omada-deployer
+  namespace: homelab
+rules:
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: omada-deployer-binding
+  namespace: homelab
+subjects:
+- kind: ServiceAccount
+  name: hpa-app-workflow-sa
+  namespace: argo
+roleRef:
+  kind: Role
+  name: omada-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: hpa-app-workflow-view-binding

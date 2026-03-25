@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: omada
+  namespace: homelab
+spec:
+  serviceName: omada
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omada
+  template:
+    metadata:
+      labels:
+        app: omada
+    spec:
+      containers:
+        - name: omada
+          image: registry.home.kenchlightyear.com/library/omada-controller:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: https-ui
+              containerPort: 8043
+              protocol: TCP
+          volumeMounts:
+            - name: omada-data
+              mountPath: /opt/tplink/EAPController/data
+            - name: omada-logs
+              mountPath: /opt/tplink/EAPController/logs
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - NET_BIND_SERVICE
+                - SETFCAP
+                - SETPCAP
+  volumeClaimTemplates:
+    - metadata:
+        name: omada-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+    - metadata:
+        name: omada-logs
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+

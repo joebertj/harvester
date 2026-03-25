@@ -1,0 +1,20 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: omada-ui
+  namespace: homelab
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`omada.home.kenchlightyear.com`)
+      kind: Rule
+      services:
+        - name: omada
+          port: 8043
+          scheme: https
+          serversTransport: insecure-transport
+  tls:
+    secretName: home-kenchlightyear-tls
+

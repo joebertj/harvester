@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: omada
+  namespace: homelab
+spec:
+  selector:
+    app: omada
+  ports:
+    - name: https-ui
+      port: 8043
+      targetPort: 8043
+      protocol: TCP
+

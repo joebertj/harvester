@@ -16,3 +16,10 @@ spec:
       secret: # Require GitHub signature verification
         name: hpa-app-webhook-secret
         key: webhook-token
+    omada:
+      port: "12000"
+      endpoint: "/push-omada"
+      method: POST
+      secret: # Require GitHub signature verification
+        name: hpa-app-webhook-secret
+        key: webhook-token

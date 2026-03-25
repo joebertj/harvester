@@ -109,3 +109,10 @@ data:
             tag: "observability"
             url: "https://grafana.home.kenchlightyear.com"
             target: "_blank"
+
+          - name: "Omada"
+            icon: "fas fa-network-wired"
+            subtitle: "Network controller UI"
+            tag: "infrastructure"
+            url: "https://omada.home.kenchlightyear.com"
+            target: "_blank"
