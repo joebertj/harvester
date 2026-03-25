@@ -9,7 +9,9 @@ KUBECONFIG_DIR="$HOME/.kube"
 HARVESTER_IP="192.168.2.123"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# 1. Ensure backup exists
+# 1. Ensure directory exists
+mkdir -p "${KUBECONFIG_DIR}"
+
 if [ ! -f "${KUBECONFIG_DIR}/config.backup" ] && [ -f "${KUBECONFIG_DIR}/config" ]; then
     echo "==> Creating backup of ~/.kube/config..."
     cp "${KUBECONFIG_DIR}/config" "${KUBECONFIG_DIR}/config.backup"
@@ -26,10 +28,20 @@ if [ "$ENV" == "do" ]; then
     echo "==> Switched DEFAULT to DigitalOcean..."
 else
     echo "==> Fetching Harvester kubeconfig from ${HARVESTER_IP}..."
-    ssh -i ~/.ssh/klti rancher@${HARVESTER_IP} "sudo cat /etc/rancher/k3s/k3s.yaml" \
-      | sed "s/127.0.0.1/${HARVESTER_IP}/g" \
-      > "${KUBECONFIG_DIR}/harvester-k3s.yaml"
-    echo "==> Switched DEFAULT to Harvester at ${KUBECONFIG_DIR}/harvester-k3s.yaml..."
+    # Check for SSH key
+    SSH_KEY="$HOME/.ssh/klti"
+    if [ ! -f "$SSH_KEY" ]; then
+        echo "⚠️  SSH Key $SSH_KEY not found. Attempting default SSH..."
+        ssh rancher@${HARVESTER_IP} "sudo cat /etc/rancher/k3s/k3s.yaml" \
+          | sed "s/127.0.0.1/${HARVESTER_IP}/g" \
+          > "${KUBECONFIG_DIR}/harvester-k3s.yaml"
+    else
+        ssh -i "$SSH_KEY" rancher@${HARVESTER_IP} "sudo cat /etc/rancher/k3s/k3s.yaml" \
+          | sed "s/127.0.0.1/${HARVESTER_IP}/g" \
+          > "${KUBECONFIG_DIR}/harvester-k3s.yaml"
+    fi
+    cp "${KUBECONFIG_DIR}/harvester-k3s.yaml" "${KUBECONFIG_DIR}/config"
+    echo "==> Switched DEFAULT to Harvester..."
 fi
 
 chmod 600 "${KUBECONFIG_DIR}/config"

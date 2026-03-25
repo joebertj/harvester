@@ -13,15 +13,14 @@ echo "  STOPPING HPA SCALING SIMULATION (GITOPS)"
 echo "========================================================="
 
 if [ -f "$APP_MANIFEST" ]; then
-    echo "⏳ Removing Argo CD Application manifest: $APP_MANIFEST"
-    
-    # We remove the file from Git to stop the managed app
-    git rm "$APP_MANIFEST"
-    git commit -m "chore: stop HPA simulation demo by removing app manifest"
+    echo "⏳ Moving HPA Simulation manifest to 'disabled' folder..."
+    mkdir -p "$(dirname "$APP_MANIFEST")/disabled"
+    git mv "$APP_MANIFEST" "$(dirname "$APP_MANIFEST")/disabled/hpa-simulation.yaml.disabled"
+    git commit -m "chore: disable HPA simulation demo by moving manifest"
     git push
 
     echo ""
-    echo "✅ Teardown triggered via GitOps!"
+    echo "✅ Teardown triggered via GitOps (Manifest moved to disabled/ folder)!"
     echo "👉 Argo CD will prune the resources in ~3 minutes."
 else
     echo "ℹ️  HPA Simulation app manifest not found. It might already be stopped."

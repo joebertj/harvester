@@ -53,9 +53,11 @@ spec:
         - /spec/replicas
 EOF
 
+fi
+
 echo "🚀 Pushing HPA Simulation manifest to Git..."
 git add "$APP_MANIFEST"
-git commit -m "chore: start HPA simulation demo by creating application manifest"
+git commit -m "chore: start HPA simulation demo by restoring/creating manifest"
 git push
 
 echo ""
