@@ -1,0 +1,24 @@
+---
+# app-of-apps.yaml — Root ArgoCD Application (Bootstrap)
+# Watches argo/argocd/applications/ and auto-deploys any Application manifests found there.
+# This is the ONLY Application that needs to be manually applied:
+#   kubectl apply -f argo/argocd/applications/app-of-apps.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/joebertj/harvester.git
+    targetRevision: main
+    path: argo/argocd/applications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
