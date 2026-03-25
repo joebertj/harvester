@@ -19,7 +19,7 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: false # Set to false to prevent Argo CD from fighting HPA replicas
     syncOptions:
       - CreateNamespace=true
   ignoreDifferences:

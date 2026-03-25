@@ -34,7 +34,7 @@ spec:
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: DoNotSchedule
+        whenUnsatisfiable: DoNotSchedule # Strict balance for homelab
         labelSelector:
           matchLabels:
             app: fastapi-metrics
