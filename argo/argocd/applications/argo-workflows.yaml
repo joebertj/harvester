@@ -15,13 +15,16 @@ spec:
     chart: argo-workflows
     targetRevision: 0.41.0 # Stable version
     helm:
-      parameters:
-        - name: server.extraArgs
-          value: "--auth-mode=client"
-        - name: controller.persistence.enabled
-          value: "true"
-        - name: server.persistence.enabled
-          value: "true"
+      values: |
+        server:
+          extraArgs:
+            - --auth-mode=server
+            - --auth-mode=client
+          persistence:
+            enabled: true
+        controller:
+          persistence:
+            enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argo
