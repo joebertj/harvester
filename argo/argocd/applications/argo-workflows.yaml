@@ -16,6 +16,8 @@ spec:
     targetRevision: 0.41.0 # Stable version
     helm:
       values: |
+        controller:
+          containerRuntimeExecutor: emissary
         server:
           extraArgs:
             - --auth-mode=server
