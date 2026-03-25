@@ -14,28 +14,32 @@ STRATEGY=$1
 NAMESPACE="harvester-autoscaling-sim"
 DEPLOYMENT="fastapi-metrics-app"
 
-    echo "Usage: ./utils/switch-strategy.sh [topology-spread|node-affinity|pod-anti-affinity]"
+if [ "$STRATEGY" == "base" ]; then
+    NEW_PATH="scaling/base"
+else
+    NEW_PATH="scaling/overlays/$STRATEGY"
+fi
 
-YAML_FILE="scaling/hpa-$STRATEGY.yaml"
+APP_MANIFEST="$REPO_ROOT/argo/argocd/applications/hpa-simulation.yaml"
 
-if [ ! -f "$YAML_FILE" ]; then
-    echo "❌ Error: Strategy file not found: $YAML_FILE"
+if [ ! -d "$REPO_ROOT/$NEW_PATH" ]; then
+    echo "❌ Error: Strategy directory not found: $NEW_PATH"
+    echo "Usage: ./utils/switch-strategy.sh [base|topology-spread|node-affinity|pod-anti-affinity]"
     exit 1
 fi
 
-# 1. Get the CURRENTLY ACTIVE image from the cluster
-CURRENT_IMAGE=$(kubectl get deployment $DEPLOYMENT -n $NAMESPACE -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null)
+echo "🚀 Switching GitOps strategy to: $STRATEGY"
+echo "📝 Updating manifest: $APP_MANIFEST"
 
-# Fallback if deployment doesn't exist yet (use a default)
-if [ -z "$CURRENT_IMAGE" ]; then
-    CURRENT_IMAGE="registry.home.kenchlightyear.com/library/scaling-fastapi:latest"
-fi
+# Update the path in the Argo CD Application manifest
+sed -i.bak "s|path: .*|path: $NEW_PATH|g" "$APP_MANIFEST" && rm "$APP_MANIFEST.bak"
 
-echo "🚀 Switching to strategy: $STRATEGY"
-echo "📦 Preserving current image: $CURRENT_IMAGE"
+echo "💾 Committing and pushing changes..."
+git add "$APP_MANIFEST"
+git commit -m "chore: switch HPA strategy to $STRATEGY via GitOps"
+git push
 
-# 2. Apply the YAML while injecting the current image
-# We use a temporary file to avoid altering the source YAML
-cat "$YAML_FILE" | sed "s|image: .*|image: $CURRENT_IMAGE|g" | kubectl apply -f -
-
-echo "✅ Strategy applied successfully!"
+echo ""
+echo "✅ GitOps manifest updated and pushed!"
+echo "👉 Argo CD will sync the new strategy in ~3 minutes."
+echo "   (Or click REFRESH in the Argo CD UI for instant application)"

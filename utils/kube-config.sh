@@ -28,8 +28,8 @@ else
     echo "==> Fetching Harvester kubeconfig from ${HARVESTER_IP}..."
     ssh -i ~/.ssh/klti rancher@${HARVESTER_IP} "sudo cat /etc/rancher/k3s/k3s.yaml" \
       | sed "s/127.0.0.1/${HARVESTER_IP}/g" \
-      > "${KUBECONFIG_DIR}/config"
-    echo "==> Switched DEFAULT to Harvester..."
+      > "${KUBECONFIG_DIR}/harvester-k3s.yaml"
+    echo "==> Switched DEFAULT to Harvester at ${KUBECONFIG_DIR}/harvester-k3s.yaml..."
 fi
 
 chmod 600 "${KUBECONFIG_DIR}/config"
