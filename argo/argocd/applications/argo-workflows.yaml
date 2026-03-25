@@ -17,7 +17,8 @@ spec:
     helm:
       values: |
         controller:
-          containerRuntimeExecutor: emissary
+          extraArgs:
+            - --container-runtime-executor=emissary
         server:
           extraArgs:
             - --auth-mode=server
