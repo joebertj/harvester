@@ -85,6 +85,21 @@ Secrets are managed via **HashiCorp Vault** + **External Secrets Operator**. Ext
 | Harbor pull secret | Via ExternalSecret | `homelab` |
 | Headlamp token | `headlamp` | `homelab` |
 | Cloudflare API token | Via ExternalSecret | `cert-manager` |
+| Argo Workflows UI token | `homelab/argocd/workflow` | `argo` |
+
+### Argo Workflows UI Token (one-time setup)
+
+The Argo Workflows UI uses a **non-expiring** ServiceAccount token stored in Vault. After first deployment, run once:
+
+```bash
+# Extract the permanent SA token
+TOKEN=$(kubectl get secret argo-workflows-ui-sa-token -n argo -o jsonpath='{.data.token}' | base64 -d)
+
+# Store it in Vault
+vault kv put homelab/argocd/workflow token="$TOKEN"
+```
+
+The ExternalSecret refreshes every 1h, syncing the permanent token from Vault into the cluster.
 
 ---
 
