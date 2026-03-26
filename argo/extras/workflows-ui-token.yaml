@@ -1,3 +1,42 @@
+---
+# ServiceAccount for Argo Workflows UI access
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo-workflows-ui
+  namespace: argo
+
+---
+# ClusterRoleBinding granting admin access to the UI service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-workflows-ui-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-workflows-admin
+subjects:
+  - kind: ServiceAccount
+    name: argo-workflows-ui
+    namespace: argo
+
+---
+# Long-lived (non-expiring) token for the SA
+# k8s auto-populates this and it never expires
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argo-workflows-ui-sa-token
+  namespace: argo
+  annotations:
+    kubernetes.io/service-account.name: argo-workflows-ui
+type: kubernetes.io/service-account-token
+
+---
+# ExternalSecret syncs the token from Vault for UI login
+# Store the permanent SA token in Vault once:
+#   vault kv put argocd/workflow token="$(kubectl get secret argo-workflows-ui-sa-token -n argo -o jsonpath='{.data.token}' | base64 -d)"
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
