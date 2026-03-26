@@ -20,6 +20,16 @@ spec:
           extraEnv:
             - name: ARGO_CONTAINER_RUNTIME_EXECUTOR
               value: emissary
+          workflowDefaults:
+            spec:
+              ttlStrategy:
+                secondsAfterCompletion: 604800  # 7 days
+                secondsAfterSuccess: 604800     # 7 days
+                secondsAfterFailure: 604800     # 7 days
+          retention:
+            completed: 20
+            failed: 10
+            errored: 10
         server:
           extraArgs:
             - --auth-mode=server
