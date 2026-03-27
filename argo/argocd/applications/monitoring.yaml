@@ -80,7 +80,7 @@ spec:
               name:
                 matches: "^(.*)"
                 as: "simulated_user_load"
-              metricsQuery: 'sum(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
+              metricsQuery: '<<.Series>>{<<.LabelMatchers>>}'
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

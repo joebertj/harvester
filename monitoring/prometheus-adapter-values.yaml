@@ -13,4 +13,4 @@ rules:
       name:
         matches: "^(.*)"
         as: "simulated_user_load"
-      metricsQuery: 'sum(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>)'
+      metricsQuery: '<<.Series>>{<<.LabelMatchers>>}'
