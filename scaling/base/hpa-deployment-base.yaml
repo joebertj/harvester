@@ -44,8 +44,7 @@ spec:
       - name: fastapi
 #        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
         image: registry.home.kenchlightyear.com/library/scaling-fastapi:hpa-app-ci-s9qms
-#        imagePullPolicy: Always
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         securityContext:
           privileged: false
           readOnlyRootFilesystem: true
