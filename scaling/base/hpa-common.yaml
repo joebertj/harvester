@@ -45,11 +45,11 @@ spec:
   maxReplicas: 9
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 5
+      stabilizationWindowSeconds: 30
       policies:
       - type: Percent
         value: 100
-        periodSeconds: 5
+        periodSeconds: 15
   metrics:
   - type: Pods
     pods:
