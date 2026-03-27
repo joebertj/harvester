@@ -1,5 +1,5 @@
 #kubectl rollout restart deployment fastapi-metrics-app -n harvester-autoscaling-sim
-#kubectl rollout restart deployment kyverno -n kyverno
+kubectl rollout restart deployment kyverno -n kyverno
 kubectl get policyreport -n harvester-autoscaling-sim -o json | python3 -c "
 import json, sys
 data = json.load(sys.stdin)

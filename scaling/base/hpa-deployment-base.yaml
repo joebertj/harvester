@@ -42,8 +42,8 @@ spec:
       - name: harbor-pullsecret
       containers:
       - name: fastapi
-        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
-#        image: registry.home.kenchlightyear.com/library/scaling-fastapi:hpa-app-ci-s9qms
+#        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
+        image: registry.home.kenchlightyear.com/library/scaling-fastapi:hpa-app-ci-qs7d9
         imagePullPolicy: Always
         securityContext:
           privileged: false
