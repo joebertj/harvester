@@ -42,15 +42,15 @@ spec:
       - name: harbor-pullsecret
       containers:
       - name: fastapi
-#        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
-        image: registry.home.kenchlightyear.com/library/scaling-fastapi:hpa-app-ci-s9qms
+        image: registry.home.kenchlightyear.com/library/scaling-fastapi:latest
+#        image: registry.home.kenchlightyear.com/library/scaling-fastapi:hpa-app-ci-s9qms
         imagePullPolicy: Always
-        securityContext:
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 1000
-          allowPrivilegeEscalation: false
+#        securityContext:
+#          privileged: false
+#          readOnlyRootFilesystem: true
+#          runAsNonRoot: true
+#          runAsUser: 1000
+#          allowPrivilegeEscalation: false
         ports:
         - containerPort: 8000
           name: http
